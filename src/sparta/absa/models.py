@@ -1,0 +1,101 @@
+from typing import Optional, Tuple, Union
+
+import torch
+from torch.nn import CrossEntropyLoss
+from transformers import XLMRobertaForSequenceClassification, XLMRobertaXLForSequenceClassification
+
+
+class XLMRobertaForABSA(XLMRobertaForSequenceClassification):
+    """Aspect-based sentiment analysis model based on XLM-RoBERTa-base/large for sequence classification."""
+
+    def forward(
+        self,
+        input_ids: torch.LongTensor,
+        attention_mask: torch.FloatTensor,
+        aspect_mask: torch.BoolTensor,
+        labels: Optional[torch.LongTensor] = None,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+        return absa_forward(self, input_ids, attention_mask, aspect_mask, labels)
+
+
+class XLMRobertaXLForABSA(XLMRobertaXLForSequenceClassification):
+    """Aspect-based sentiment analysis model based on XLM-RoBERTa-XL/XXL for sequence classification."""
+
+    def forward(
+        self,
+        input_ids: torch.LongTensor,
+        attention_mask: torch.FloatTensor,
+        aspect_mask: torch.BoolTensor,
+        labels: Optional[torch.LongTensor] = None,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+        return absa_forward(self, input_ids, attention_mask, aspect_mask, labels)
+
+
+def absa_forward(
+    model: Union[XLMRobertaForABSA, XLMRobertaXLForABSA],
+    input_ids: torch.LongTensor,
+    attention_mask: torch.FloatTensor,
+    aspect_mask: torch.BoolTensor,
+    labels: Optional[torch.Tensor] = None,
+) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+    """Conduct a forward pass of the model for aspect-based sentiment analysis.
+
+    This is an adaptation from:
+        https://github.com/ROGERDJQ/RoBERTaABSA/blob/main/Train/finetune.py#L162-L164
+
+    Args:
+        model (Union[XLMRobertaForABSA, XLMRobertaXLForABSA]): XLM RoBERTa model for aspect-based sentiment analysis (base, large, XL, or XXL)
+        input_ids (torch.LongTensor): Input IDs
+        attention_mask (torch.FloatTensor): Attention mask
+        aspect_mask (torch.BoolTensor): Aspect mask, indicating which tokens correspond to the aspect
+        labels (Optional[torch.LongTensor], optional): Labels. Defaults to None.
+
+    Returns:
+        Tuple[torch.Tensor]: Logits (in prediction mode) or loss and logits (in training mode)
+    """
+    # Call the RoBERTa encoder to get contextualized embeddings
+    output_roberta = model.roberta(
+        input_ids=input_ids,
+        attention_mask=attention_mask,
+        output_attentions=False,
+        output_hidden_states=False,
+        return_dict=False,
+    )
+    intermediate_output = output_roberta[0]
+
+    # Get mean of tokens for all aspects
+    # fill_mask = aspect_mask.unsqueeze(-1).eq(0)
+    # intermediate_for_aspect = intermediate_output.masked_fill(fill_mask, 0)
+    # intermediate_for_aspect = intermediate_for_aspect.sum(dim=1)
+    # div_mask = aspect_mask.sum(dim=1, keepdims=True).float()  # type: ignore
+    # preds = intermediate_for_aspect / div_mask
+
+    # Get max pooling of tokens for all aspects
+    fill_mask = aspect_mask.unsqueeze(-1).eq(0)  # bsz x max_len x 1
+    intermediate_entity = intermediate_output.masked_fill(fill_mask, -10000.0)
+    preds, _ = intermediate_entity.max(dim=1)
+
+    # Add one dimension, because original XLMRobertaClassificationHead expects it to extract only embeddings for the CLS token.
+    # In this case it is only mocked, since we provide a different embedding in conjunction with an aspect mask.
+    # Transformation here (bsz x 768) -> (bsz x 1 x 768).
+    # XLMRobertaClassificationHead will take only first token from each item [:, 0, :] and thus reduce dimensions to (bsz x 768) again.
+    preds_reshaped = preds.unsqueeze(1)
+
+    # Apply classifier
+    logits = model.classifier(preds_reshaped)
+
+    # Compute classification loss in case of labels (in training mode)
+    loss = None
+    if labels is not None:
+        # Move labels to correct device to enable model parallelism
+        labels = labels.to(logits.device)
+
+        loss_fct = CrossEntropyLoss()
+        loss = loss_fct(logits.view(-1, model.num_labels), labels.view(-1))
+
+    # Return the final output of the model logits (in prediction mode) or logits and the loss (in training mode)
+    output = (logits,)
+    if loss is not None:
+        return (loss,) + output
+
+    return output

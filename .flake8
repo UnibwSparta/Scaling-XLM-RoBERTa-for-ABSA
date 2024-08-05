@@ -1,0 +1,14 @@
+[flake8]
+extend-ignore =
+    # A003: class attribute "id" is shadowing a python builtin
+    A003
+    # B023: Function definition does not bind loop variable (used in loading_df.py)
+    B023
+
+exclude =
+    # No need to traverse our git directory
+    .git,
+    # There's no value in checking cache directories
+    __pycache__
+
+max-line-length = 160

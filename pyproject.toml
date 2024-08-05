@@ -1,0 +1,114 @@
+[tool.poetry]
+name = "llms-sentiment-analysis-and-stance-detection"
+version = "1.0.0"
+description = ""
+authors = ["i23barmu <arthur.mueller@unibw.de>"]
+readme = "README.rst"
+packages = [{include = "sparta", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10.12"
+sentencepiece = "^0.1.99"
+protobuf = "3.20.2"
+torch = "^2.4.0"
+transformers = "^4.43.3"
+accelerate = "^0.33.0"
+datasets = "^2.20.0"
+pandas = "^2.2.2"
+evaluate = "^0.4.2"
+scikit-learn = "^1.5.1"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.8.0"
+black = "^24.2.0"
+isort = "^5.13.2"
+flake8 = "^7.0.0"
+coverage = "^7.4.1"
+pytest = "^8.0.1"
+types-PyYAML = "^6.0.12"
+ipykernel = "^6.29.5"
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+
+# Untyped Definitions and Calls
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+
+[[tool.mypy.overrides]]
+module = "accelerate"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "accelerate.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "einops"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "nltk.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pandas"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "sklearn.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "transformers"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "transformers.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "datasets"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "datasets.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "evaluate"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "evaluate.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tqdm.*"
+ignore_missing_imports = true
+
+[tool.isort]
+multi_line_output=3
+include_trailing_comma=true
+force_grid_wrap=0
+use_parentheses=true
+line_length=160
+skip="migrations"
+profile="black"
+
+[tool.black]
+line-length=160
