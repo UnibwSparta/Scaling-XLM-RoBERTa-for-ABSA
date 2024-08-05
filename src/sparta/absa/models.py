@@ -41,7 +41,7 @@ def absa_forward(
     """Conduct a forward pass of the model for aspect-based sentiment analysis.
 
     This is an adaptation from:
-        https://github.com/ROGERDJQ/RoBERTaABSA/blob/main/Train/finetune.py#L162-L164
+        https://github.com/ROGERDJQ/RoBERTaABSA/blob/main/Train/finetune.py#L160-L168
 
     Args:
         model (Union[XLMRobertaForABSA, XLMRobertaXLForABSA]): XLM RoBERTa model for aspect-based sentiment analysis (base, large, XL, or XXL)
@@ -63,17 +63,17 @@ def absa_forward(
     )
     intermediate_output = output_roberta[0]
 
-    # Get mean of tokens for all aspects
+    # Get max pooling of tokens for all aspects
+    fill_mask = aspect_mask.unsqueeze(-1).eq(0)  # bsz x max_len x 1
+    intermediate_for_aspect = intermediate_output.masked_fill(fill_mask, -10000.0)
+    preds, _ = intermediate_for_aspect.max(dim=1)
+
+    # ALTERNATIVE: Get mean pooling of tokens for all aspects
     # fill_mask = aspect_mask.unsqueeze(-1).eq(0)
     # intermediate_for_aspect = intermediate_output.masked_fill(fill_mask, 0)
     # intermediate_for_aspect = intermediate_for_aspect.sum(dim=1)
     # div_mask = aspect_mask.sum(dim=1, keepdims=True).float()  # type: ignore
     # preds = intermediate_for_aspect / div_mask
-
-    # Get max pooling of tokens for all aspects
-    fill_mask = aspect_mask.unsqueeze(-1).eq(0)  # bsz x max_len x 1
-    intermediate_entity = intermediate_output.masked_fill(fill_mask, -10000.0)
-    preds, _ = intermediate_entity.max(dim=1)
 
     # Add one dimension, because original XLMRobertaClassificationHead expects it to extract only embeddings for the CLS token.
     # In this case it is only mocked, since we provide a different embedding in conjunction with an aspect mask.
