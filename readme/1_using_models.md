@@ -1,10 +1,10 @@
 ## Using (Large) Language Models for Text Classification
 
-This article provides a brief tutorial on how to use some common Transformer-based language models for text classification. Here we focus on the [sentiment analysis](https://paperswithcode.com/task/sentiment-analysis) task and showcase differences to the [stance detection](https://doi.org/10.1016/j.ipm.2021.102597) task. In this tutorial we use the HuggingFace [plattform](https://huggingface.co/) and [library](https://github.com/huggingface/transformers) to access and run pre-trained language models.
+This article provides a brief tutorial on how to use some common Transformer-based language models for text classification. Here we focus on the [sentiment analysis](https://paperswithcode.com/task/sentiment-analysis) task and showcase differences to the [stance detection](https://doi.org/10.1016/j.ipm.2021.102597) task. In this tutorial we use the HuggingFace [plattform](https://huggingface.co/) and [framework](https://github.com/huggingface/transformers) to access and run pre-trained language models.
 
 ### Sentiment Analysis Models
 
-On the HuggingFace plattform you can find very different models that have been pre-trained and fine-tuned specifically to solve the task of sentiment analysis. This task can have very different characteristics depending on:
+In general, the sentiment analysis aims to derive author's sentiment (affective state) towards something by inspecting his/her statement, e.g. text. In it's core, sentiment analysis focuses a lot on sentimental signal words in specific contexts. On the HuggingFace plattform you can find very different models that have been pre-trained and fine-tuned specifically to solve the task of sentiment analysis. This task can have very different characteristics depending on:
 
 - number of sentiment classes, e.g.
     - [one-way (binary regression)](https://en.wikipedia.org/wiki/Binary_regression) - a score from 0 to 100
@@ -20,8 +20,6 @@ On the HuggingFace plattform you can find very different models that have been p
 - domain, e.g. sentiment of [movie reviews](https://paperswithcode.com/sota/sentiment-analysis-on-imdb) or [product revews](https://paperswithcode.com/dataset/amazon-review)
 - text quality, e.g. considering the language used in news paper articles of very high quality and the language used on social media networks of low quality (noisy)
 - text length, e.g. tweets are very short while news articles can be very long, thus, even exceeding the model's maximum input sequence length
-
-**TODO** Definition of the Sentiment Analysis task and specifics!
 
 Here are some example models for sentiment analysis from HuggingFace:
 
@@ -44,7 +42,7 @@ Here are some example models for sentiment analysis from HuggingFace:
 
 ### Stance Detection Models
 
-**TODO** Difference of stance detection to the Sentiment Analysis task.
+In contrast to sentiment analysis, the task of stance detection aims to classify author's stance (position) towards something. Stance can depend on sentimental signal words. In this sense, it is related to sentiment analysis. However, sentiment may be also misleading, since a position against something might be expressed with a positive sentiment as well, e.g. as ironie. Therefore, stance detection is a more complex task. It can be
 
 - number of classes, e.g.
     - [two-way](https://aclanthology.org/2021.findings-acl.208.pdf)
@@ -57,6 +55,7 @@ Here are some example models for sentiment analysis from HuggingFace:
     - [pair of targets](https://aclanthology.org/E17-2088.pdf)
     - [multi-target](https://link.springer.com/chapter/10.1007/978-3-031-15086-9_9)
     - [claim-based](https://ceur-ws.org/Vol-2624/paper9.pdf)
+- language, text quality, text length, and **especially domain**
 
 Here are some example models for stance detection from HuggingFace. As can be seen, data domains used for stance detection are much more specific compared to sentiment analysis and frequently focus on dedicated topics or issues:
 
@@ -78,7 +77,7 @@ Here are some example models for stance detection from HuggingFace. As can be se
 
 ### Trivial Example of Usage
 
-The majority of models for text classification that published of the HuggingFace plattform are usually easy to use. One just need an installed [Python distribution](https://www.python.org/about/gettingstarted/), some basic skills in using a [command line](https://www.freecodecamp.org/news/command-line-for-beginners/#shell) in a shell, and access to at least one GPU (or many CPUs). It is recommended to use a [virtual environment](https://realpython.com/python-virtual-environments-a-primer/) dedicated to one project, instead of installing necessary Python packages system-wide. Most convinient choice is frequently [Anaconda](https://docs.anaconda.com/anaconda/install/). For more advanced users, [Poetry](https://python-poetry.org/) is a good choice as well.
+The majority of models for text classification that are published on the HuggingFace plattform are usually easy to use. One just need an installed [Python distribution](https://www.python.org/about/gettingstarted/), some basic skills in using a [command line](https://www.freecodecamp.org/news/command-line-for-beginners/#shell) in a shell, and access to at least one GPU (or many CPUs). It is recommended to use a [virtual environment](https://realpython.com/python-virtual-environments-a-primer/) dedicated to one Python project, instead of installing necessary Python packages system-wide. Most convinient choice is frequently [Anaconda](https://docs.anaconda.com/anaconda/install/). For more advanced users, [Poetry](https://python-poetry.org/) is a good choice as well.
 
 * Install packages into your new Python virtual environment, e.g. for AnaConda:
 
@@ -87,12 +86,12 @@ The majority of models for text classification that published of the HuggingFace
     cd YOUR_PROJECT_FOLDER
 
     # Initialize a virtual environment
-    conda create -n venv
+    conda create -n my_project
 
     # Activate the virtual environment
-    conda activate venv
+    conda activate my_project
 
-    # Install HuggingFace Transformers library
+    # Install HuggingFace Transformers framework
     conda install conda-forge::transformers
     ```
 
@@ -105,11 +104,11 @@ The majority of models for text classification that published of the HuggingFace
     # Initialize a virtual environment
     poetry init
 
-    # Install HuggingFace Transformers library
+    # Install HuggingFace Transformers framework
     poetry add transformers
     ```
 
-* Create a simple script `my_script.py` to load and run a HuggingFace model:
+* Create a simple script `my_script.py` to load and run the HuggingFace model [cardiffnlp/twitter-xlm-roberta-base-sentiment](https://huggingface.co/cardiffnlp/twitter-xlm-roberta-base-sentiment):
 
     ```python
     import torch
@@ -121,12 +120,12 @@ The majority of models for text classification that published of the HuggingFace
     # Load one of the sentiment models for text classification as a pipeline
     pipe = pipeline(
         task="text-classification",
-        model="yangheng/deberta-v3-large-absa-v1.1",
+        model="cardiffnlp/twitter-xlm-roberta-base-sentiment",
         device=device,
     )
 
     # Run the model on an example
-    result = pipe("This restaurant has a very bad food. It will won't a hit!")
+    result = pipe("This restaurant has a very bad food. It won't be a hit!")
 
     # Print your result
     print(result)

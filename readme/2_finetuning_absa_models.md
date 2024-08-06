@@ -32,12 +32,12 @@ ds_train = dataset["train"]
 ds_test = dataset["test"]
 ```
 
-To be able extracting correct embeddings from the model, we need to map aspect words to model tokens. This can be achieved by HuggingFace's function [BatchEncoding.char_to_token()](https://huggingface.co/docs/transformers/main_classes/tokenizer#transformers.BatchEncoding.char_to_token) that will return coresponding token positions for every character of the original input sentence. First, we use model's tokenizer to create `BatchEncoding` objects for all dataset items. In this case, maximal length of 100 model tokens is enough to fit any text from the given dataset.
+To be able extracting correct embeddings from the model, we need to map aspect words to model tokens. This can be achieved by HuggingFace's function [BatchEncoding.char_to_token()](https://huggingface.co/docs/transformers/main_classes/tokenizer#transformers.BatchEncoding.char_to_token) that will return corresponding token positions for every character of the original input sentence. First, we use model's tokenizer to create `BatchEncoding` objects for all dataset items. In this case, maximal length of 100 model tokens is enough to fit any text from the given dataset.
 
 ```python
 from transformers import AutoTokenizer
 
-tokenizer = AutoTokenizer.from_pretrained('xlm-roberta-base')
+tokenizer = AutoTokenizer.from_pretrained('roberta-base')
 batch_encoding = tokenizer(ds_train["text"], padding="max_length", max_length=100, truncation=True)
 ```
 
@@ -89,7 +89,7 @@ ds_train = ds_train.add_column("aspect_mask", aspect_masks)
 ds_train = ds_train.rename_column("label", "labels")
 ```
 
-Finally, we need to fix the labels of Laptop 2014 dataset to fit classifier output expectations. Labels in the dataset are `[-1, 0, 1]` and need to be `[0, 1, 2]`. Thus, need to be incremented.
+Finally, we need to fix the labels of the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) to fit classifier output expectations. Labels in the dataset are `[-1, 0, 1]` and need to be `[0, 1, 2]`. Thus, need to be incremented.
 
 ```python
 ds_train = ds_train.map(lambda example: example["labels"] = example["labels"] + 1)
@@ -397,7 +397,7 @@ Comparing the results show that:
 
 ### Using the Fine-tuned Model
 
-In contrast to the training procedure, there is no appropriate [Evaluator](https://huggingface.co/docs/evaluate/package_reference/evaluator_classes#evaluator) class for the ABSA task within the HuggingFace `transformers` framework. This need to be implemented with the functionality of `accelerate` framework for distributed execution of large models on multiple GPUs. Therefore, we create a script `use_absa.py` that we will run later with the `accelerate` tool.
+In contrast to the training procedure, we cannot use the [Evaluator](https://huggingface.co/docs/evaluate/package_reference/evaluator_classes#evaluator) class from the HuggingFace `transformers` framework in a similar way we used the Trainer class. The Trainer class handled the FSDP appoach for model distribution over multiple GPUs. For evauation, this need to be implemented with the functionality of `accelerate` framework. Therefore, we create a script `use_absa.py` that we will run later with the `accelerate` tool.
 
 ```
 accelerate launch --config_file accelerate.cfg use_absa.py
@@ -416,7 +416,7 @@ accelerator = Accelerator()
 model = accelerator.prepare(model)
 ```
 
-As example, we use the test dataset for Laptop 2014. First, the test dataset need to be prepared in the same way. We use the [preparation function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36) `prepare_dataset_for_absa_laptop_2014` elaborated in the previous section of this tutorial. Only a part of dataset is needed for a fast test, e.g. 16 items. But be aware that the amount of items should be a multiple of the number of GPUs used.
+As example, we use the test set from the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops). First, the test dataset need to be prepared in the same way. We use the [preparation function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36) `prepare_dataset_for_absa_laptop_2014` elaborated in the previous section of this tutorial. Only a part of dataset is needed for a fast test, e.g. 16 items. But be aware that the amount of items should be a multiple of the number of GPUs used.
 
 ```python
 from datasets import load_dataset
