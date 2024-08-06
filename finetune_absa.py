@@ -5,14 +5,20 @@
 
 To run this script use accelerate within poetry environment:
 
-    - For XLM-RoBERTA-base or -large model:
+    - For RoBERTA-base or -large model:
         poetry run accelerate launch --config_file accelerate_configs/roberta.yaml finetune_absa.py
 
+    - For XLM-RoBERTA-base or -large model:
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_base_large.yaml finetune_absa.py
+
     - For XLM-RoBERTA-XL model:
-        poetry run accelerate launch --config_file accelerate_configs/roberta_xl.yaml finetune_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xl.yaml finetune_absa.py
 
     - For XLM-RoBERTA-XXL model:
-        poetry run accelerate launch --config_file accelerate_configs/roberta_xxl.yaml finetune_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xxl.yaml finetune_absa.py
+
+   - For (m)DeBerta-base or -large model:
+        poetry run accelerate launch --config_file accelerate_configs/deberta.yaml finetune_absa.py
 
 Before running complete TODO 1 and TODO 2 tasks in the script by uncommenting the model you want to use.
 """
@@ -32,21 +38,29 @@ from sparta.absa.aspects import prepare_dataset_for_absa_laptop_2014
 from sparta.absa.metrics import get_metrics_function
 
 # TODO 1: Uncomment the model you want to use:
-# - XLMRobertaForABSA is the base or large model
-# - XLMRobertaXLForABSA is the XL or XXL model
-# from sparta.absa.models import XLMRobertaForABSA as XLMRobertaForABSA
-from sparta.absa.models import XLMRobertaXLForABSA as XLMRobertaForABSA
+# - RobertaForABSA is the roberta-base or -large model
+# - XLMRobertaForABSA is the xlm-roberta-base or -large model
+# - XLMRobertaXLForABSA is the xlm-roberta-xl or -xxl model
+# - DebertaForABSA is the (m)deberta-v3-base or -large model
+from sparta.absa.models import RobertaForABSA as ModelForABSA
+# from sparta.absa.models import XLMRobertaForABSA as ModelForABSA
+# from sparta.absa.models import XLMRobertaXLForABSA as ModelForABSA
+# from sparta.absa.models import DebertaForABSA as ModelForABSA
 
 # TODO 2: Ucomment the model you want to use
+model_name = "roberta-base"
+# model_name = "roberta-large"
 # model_name = "xlm-roberta-base"
 # model_name = "xlm-roberta-large"
 # model_name = "facebook/xlm-roberta-xl"
 # model_name = "facebook/xlm-roberta-xxl"
+# model_name = "microsoft/mdeberta-v3-base"
+# model_name = "microsoft/deberta-v3-base"
+# model_name = "microsoft/deberta-v3-large"
 
 # NOTE: It makes sense to first download the large models to a local path and then use it
 # model_name = "/path_to_local/xlm-roberta-xl/"
 # model_name = "/path_to_local/xlm-roberta-xxl/"
-model_name = "/raid/models/xlm-roberta-xxl/"
 
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -73,7 +87,7 @@ if __name__ == "__main__":
     }
 
     # Load the model with the new configuration
-    model = XLMRobertaForABSA.from_pretrained(model_name, config=config)
+    model = ModelForABSA.from_pretrained(model_name, config=config)
 
     # Define training arguments
     training_args = TrainingArguments(

@@ -1,6 +1,6 @@
 ## Fine-tuning XLM-RoBERTa Models of Different Sizes on One or Multiple GPUs for Aspect-based Sentiment Analysis (ABSA)
 
-This article provides a detailed tutorial on how to fine-tune differently sized [XLM-RoBERTa](https://arxiv.org/abs/1911.02116v2)-based language models for the specific task of aspect-based sentiment analysis (ABSA) using the approach proposed by [Gao et al. (2019)](https://ieeexplore.ieee.org/abstract/document/8864964) originally for the [BERT](https://arxiv.org/abs/1810.04805?amp=1) model. The implementation uses the HuggingFace libraries [transformers](https://huggingface.co/docs/transformers) and [accelerate](https://huggingface.co/docs/accelerate/index). We provide a full executable code example for [fine-tuning an ABSA model](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) and subsequent [evaluation](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/use_absa.py) of the trained model. Please install necesary [requirements](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/requirements.txt) for this tutorial first.
+This article provides a detailed tutorial on how to fine-tune differently sized BERT-based language models, such as [XLM-RoBERTa](https://arxiv.org/abs/1911.02116v2) or [(m)DebertaV3](https://arxiv.org/pdf/2111.09543v4), for the specific task of aspect-based sentiment analysis (ABSA) using the approach proposed by [Gao et al. (2019)](https://ieeexplore.ieee.org/abstract/document/8864964) originally for the [BERT](https://arxiv.org/abs/1810.04805?amp=1) model. The implementation uses the HuggingFace libraries [transformers](https://huggingface.co/docs/transformers) and [accelerate](https://huggingface.co/docs/accelerate/index). We provide a full executable code example for [fine-tuning an ABSA model](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) and subsequent [evaluation](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/use_absa.py) of the trained model. Please install necesary [requirements](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/requirements.txt) for this tutorial first.
 
 ```
 transformers
@@ -14,7 +14,7 @@ sentencepiece==0.1.99
 
 ### Model Architecture
 
-The model architecture introduced by Gao et al. in the paper *[Target-Dependent Sentiment Classification With BERT](https://ieeexplore.ieee.org/abstract/document/8864964)* is shown in the figure below. For classification, the model embeddings coresponding to an aspect term, e.g. *battery timer*, are extracted from the models output. Max or mean pooling is then used to summarize multiple embeddings to one vector. Upon this vector a fully connected layer conducts the final classification into three classes.
+The model architecture introduced by Gao et al. in the paper *[Target-Dependent Sentiment Classification With BERT](https://ieeexplore.ieee.org/abstract/document/8864964)* is shown in the figure below. For classification, the model embeddings corresponding to an aspect term, e.g. *battery timer*, are extracted from the models output. Max or mean pooling is then used to summarize multiple embeddings to one vector. Upon this vector a fully connected layer conducts the final classification into three classes. We can substitute the BERT model by any BERT-based model, e.g. [XLM-RoBERTA](https://arxiv.org/abs/1911.02116v2), [Deberta](https://arxiv.org/pdf/2111.09543v4), or [ELECTRA](https://arxiv.org/pdf/2003.10555v1).
 
 [![Model architecture according to Gao et al. (2019)](td-bert-gao-2019.png "Model architecture according to Gao et al. (2019)")](https://ieeexplore.ieee.org/abstract/document/8864964)
 
@@ -101,18 +101,28 @@ Unfortunately, the HuggingFace library does not provide a dedicated model for as
 
 * For `xlm-roberta-base` and `-large` - [XLMRobertaForSequenceClassification](https://huggingface.co/docs/transformers/v4.43.4/en/model_doc/xlm-roberta#transformers.XLMRobertaForSequenceClassification)
 * For `facebook/xlm-roberta-xl` and `-xxl` - [XLMRobertaXLForSequenceClassification](https://huggingface.co/docs/transformers/model_doc/xlm-roberta-xl#transformers.XLMRobertaXLForSequenceClassification)
+* For `microsoft/(m)deberta-v3-base` and `-large` - [DebertaV2ForSequenceClassification](https://huggingface.co/docs/transformers/model_doc/deberta-v2#transformers.DebertaV2ForSequenceClassification)
 
 Derived model need to provide a `forward()` method that takes all necessary parameters from our dataset: input IDs, attention mask, aspect mask, and labels.
 
 ```python
 from typing import Optional
+
 import torch
+from transformers import (
+    XLMRobertaForSequenceClassification,
+    XLMRobertaXLForSequenceClassification,
+    DebertaV2ForSequenceClassification,
+)
 
-# For base/large
-class XLMRobertaForABSA(XLMRobertaForSequenceClassification):
+# For xlm-roberta-base/large
+class ModelForABSA(XLMRobertaForSequenceClassification):
 
-# For xl/xxl
-# class XLMRobertaForABSA(XLMRobertaXLForSequenceClassification):
+# For xlm-roebrta-xl/xxl
+# class ModelForABSA(XLMRobertaXLForSequenceClassification):
+
+# For (m)deberta-v3-base/large
+# class ModelForABSA(DebertaV2ForSequenceClassification):
 
     def forward(
         self,
@@ -126,21 +136,24 @@ class XLMRobertaForABSA(XLMRobertaForSequenceClassification):
 
 The procedure is:
 
-1. to call the underlying XLM-RoBERTa encoder and take the complete intermediate output,
+1. to call the underlying encoder and take the complete intermediate output,
 2. to extract aspect embeddings and to max pool them (originally from [Dai et al. (2021)](https://github.com/ROGERDJQ/RoBERTaABSA/blob/main/Train/finetune.py#L166-L168)),
 3. to apply fully connected classifier,
 4. to compute cross entropy loss, if labels are provided.
 
 ```python
 # (1) Call the RoBERTa encoder to get contextualized embeddings
-output_roberta = self.roberta(
+encoder_module_name = "roberta"
+# encoder_module_name = "deberta"
+encoder = getattr(self, encoder_module_name)
+encoder_output = encoder(
     input_ids=input_ids,
     attention_mask=attention_mask,
     output_attentions=False,
     output_hidden_states=False,
     return_dict=False,
 )
-intermediate_output = output_roberta[0]
+intermediate_output = encoder_output[0]
 
 # (2) Get max pooling of tokens for the aspect(s)
 fill_mask = aspect_mask.unsqueeze(-1).eq(0)
@@ -177,6 +190,9 @@ model_name = "xlm-roberta-base"
 # model_name = "xlm-roberta-large"
 # model_name = "facebook/xlm-roberta-xl"
 # model_name = "facebook/xlm-roberta-xxl"
+# model_name = "microsoft/mdeberta-v3-base"
+# model_name = "microsoft/deberta-v3-base"
+# model_name = "microsoft/deberta-v3-large"
 
 # Create an id2label mapping for this specific task
 config.id2label = {
@@ -186,7 +202,7 @@ config.id2label = {
 }
 
 # Load the model with the new configuration
-model = XLMRobertaForABSA.from_pretrained(model_name, config=config)
+model = ModelForABSA.from_pretrained(model_name, config=config)
 ```
 
 
@@ -202,6 +218,7 @@ For FSDP, the most important parameters are number of GPUs to use and the model'
 
 * For `xlm-roberta-base` and `-large` - [XLMRobertaLayer](https://github.com/huggingface/transformers/blob/main/src/transformers/models/xlm_roberta/modeling_xlm_roberta.py#L384)
 * For `facebook/xlm-roberta-xl` and `-xxl` - [XLMRobertaXLLayer](https://github.com/huggingface/transformers/blob/main/src/transformers/models/xlm_roberta_xl/modeling_xlm_roberta_xl.py#L368)
+* For `microsoft/(m)deberta-base` and `-large` - [DebertaV2Layer](https://github.com/huggingface/transformers/blob/main/src/transformers/models/xlm_roberta_xl/modeling_xlm_roberta_xl.py#L368)
 
 A complete FSDP configuration for `accelerate` looks like:
 
@@ -233,7 +250,7 @@ tpu_use_sudo: false
 use_cpu: false
 ```
 
-Please refer to the full examles for [base/large](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/accelerate_configs/roberta_base_large.yaml) (1 GPU), [xl](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/accelerate_configs/roberta_xl.yaml) (2 GPUs), and [xxl](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/accelerate_configs/roberta_xxl.yaml) (4 GPUs). The training script need to be started in the following way:
+Please refer to the full [configuration examles for different models](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/accelerate_configs/). The training script need to be started in the following way:
 
 ```bash
 accelerate launch --config_file accelerate.cfg finetune_absa.py
@@ -314,15 +331,29 @@ trainer.train()
 
 ### Fine-tuning Results
 
-We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) to train differently sized XLM-RoBERTa models without dedicated hyper parameter search. Training results for the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) with the ABSA model are shown in the table below. We conducted three runs for every setup evaluating on the test set and provide result ranges to showcase the effect of scaling.
+We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) to train differently sized XLM-RoBERTa/Deberta models without dedicated hyper parameter search. Training results for the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) with the ABSA model are shown in the table below. We conducted three runs for every setup evaluating on the test set and provide rounded result ranges to showcase the effect of scaling, language, and architecture.
 
-| **model** | **macro F1** | **accuracy** | **min\_gpus** | **min\_gpu\_size** |
-| :-- | :-- | :-- | :-- | :-- |
-| [xlm-roberta-base](https://huggingface.co/FacebookAI/xlm-roberta-base) | 73-76% | 76-80% | 1 | 8 |
-| [xlm-roberta-large](https://huggingface.co/FacebookAI/xlm-roberta-large) | 77-78% | 80-82% | 1 | 16 |
-| [xlm-roberta-xl](https://huggingface.co/facebook/xlm-roberta-xl) | 79-80% | 81-83% | 2 | 32 |
-| [xlm-roberta-xxl](https://huggingface.co/facebook/xlm-roberta-xxl) | 81-82% | 83-84% | 4 | 40 |
+| **roberta model** | **dimension** | **macro F1** | **accuracy** | **min\_gpus** | **min\_gpu\_size** | **language**
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| [roberta-base](https://huggingface.co/FacebookAI/roberta-base) | English | base | % | % | 1 | 8 |
+| [roberta-large](https://huggingface.co/FacebookAI/roberta-large) | English | large | % | % | 1 | 16 |
+| [xlm-roberta-base](https://huggingface.co/FacebookAI/xlm-roberta-base) | multilingual | base | 73-76% | 76-80% | 1 | 8 |
+| [xlm-roberta-large](https://huggingface.co/FacebookAI/xlm-roberta-large) | multilingual | large | 77-78% | 80-82% | 1 | 16 |
+| [xlm-roberta-xl](https://huggingface.co/facebook/xlm-roberta-xl) | multilingual | xl | 79-80% | 81-83% | 2 | 32 |
+| [xlm-roberta-xxl](https://huggingface.co/facebook/xlm-roberta-xxl) | multilingual | xxl | 81-82% | 83-84% | 4 | 40 |
 
-In comparison, a more recent ensemble approach by [Yang and Li (2021)](https://arxiv.org/pdf/2110.08604) named *LSAE-X-DeBERTa* achieves macro F1 scores over 84% and accuracy over 86% on the same dataset. Provided [PyABSA](https://github.com/yangheng95/PyABSA) package is worth looking at.
+| **deberta model** |  **language** | **dimension** | **macro F1** | **accuracy** | **min\_gpus** | **min\_gpu\_size** |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| [deberta-v3-base](https://huggingface.co/microsoft/deberta-v3-base) | English | base | 77-80% | 81-83% | 1 | 8 |
+| [deberta-v3-large](https://huggingface.co/microsoft/deberta-v3-large) | English | large | 81-82% | 84-85% | 1 | 16 |
+| [mdeberta-v3-base](https://huggingface.co/microsoft/mdeberta-v3-base) |  multilingual | base | 72-76% | 77-80% | 1 | 8 |
+
+
+| **electra model** | **language** | **dimension** | **macro F1** | **accuracy** | **min\_gpus** | **min\_gpu\_size** |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| [google/electra-base-discriminator](https://huggingface.co/google/electra-base-discriminator) | English | base | % | % | 1 | 8 |
+| [google/electra-large-discriminator](https://huggingface.co/google/electra-large-discriminator) | English | large | % | % | 1 | 16 |
+
+In comparison, a more recent ensemble approach by [Yang and Li (2021)](https://arxiv.org/pdf/2110.08604) named *LSA<sub>E</sub>-X-DeBERTa* achieves macro F1 scores over 84% and accuracy over 86% on the same dataset. Provided [PyABSA](https://github.com/yangheng95/PyABSA) package is worth looking at.
 
 ### Using a Fine-tuned Model

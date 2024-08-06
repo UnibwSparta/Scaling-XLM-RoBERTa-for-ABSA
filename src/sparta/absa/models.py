@@ -2,7 +2,26 @@ from typing import Optional, Tuple, Union
 
 import torch
 from torch.nn import CrossEntropyLoss
-from transformers import XLMRobertaForSequenceClassification, XLMRobertaXLForSequenceClassification
+from transformers import (
+    RobertaForSequenceClassification,
+    XLMRobertaForSequenceClassification,
+    XLMRobertaXLForSequenceClassification,
+    DebertaV2ForSequenceClassification,
+    ElectraForSequenceClassification,
+)
+
+
+class RobertaForABSA(RobertaForSequenceClassification):
+    """Aspect-based sentiment analysis model based on XLM-RoBERTa-base/large for sequence classification."""
+
+    def forward(
+        self,
+        input_ids: torch.LongTensor,
+        attention_mask: torch.FloatTensor,
+        aspect_mask: torch.BoolTensor,
+        labels: Optional[torch.LongTensor] = None,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+        return absa_forward(self, "roberta", input_ids, attention_mask, aspect_mask, labels)
 
 
 class XLMRobertaForABSA(XLMRobertaForSequenceClassification):
@@ -15,8 +34,7 @@ class XLMRobertaForABSA(XLMRobertaForSequenceClassification):
         aspect_mask: torch.BoolTensor,
         labels: Optional[torch.LongTensor] = None,
     ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
-        return absa_forward(self, input_ids, attention_mask, aspect_mask, labels)
-
+        return absa_forward(self, "roberta", input_ids, attention_mask, aspect_mask, labels)
 
 class XLMRobertaXLForABSA(XLMRobertaXLForSequenceClassification):
     """Aspect-based sentiment analysis model based on XLM-RoBERTa-XL/XXL for sequence classification."""
@@ -28,11 +46,38 @@ class XLMRobertaXLForABSA(XLMRobertaXLForSequenceClassification):
         aspect_mask: torch.BoolTensor,
         labels: Optional[torch.LongTensor] = None,
     ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
-        return absa_forward(self, input_ids, attention_mask, aspect_mask, labels)
+        return absa_forward(self, "roberta", input_ids, attention_mask, aspect_mask, labels)
+
+
+class DebertaForABSA(DebertaV2ForSequenceClassification):
+    """Aspect-based sentiment analysis model based on Deberta-base/large for sequence classification."""
+
+    def forward(
+        self,
+        input_ids: torch.LongTensor,
+        attention_mask: torch.FloatTensor,
+        aspect_mask: torch.BoolTensor,
+        labels: Optional[torch.LongTensor] = None,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+        return absa_forward(self, "deberta", input_ids, attention_mask, aspect_mask, labels)
+
+
+class ElectraForABSA(ElectraForSequenceClassification):
+    """Aspect-based sentiment analysis model based on electra-base/large for sequence classification."""
+
+    def forward(
+        self,
+        input_ids: torch.LongTensor,
+        attention_mask: torch.FloatTensor,
+        aspect_mask: torch.BoolTensor,
+        labels: Optional[torch.LongTensor] = None,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+        return absa_forward(self, "electra", input_ids, attention_mask, aspect_mask, labels)
 
 
 def absa_forward(
     model: Union[XLMRobertaForABSA, XLMRobertaXLForABSA],
+    encoder_module_name: str,
     input_ids: torch.LongTensor,
     attention_mask: torch.FloatTensor,
     aspect_mask: torch.BoolTensor,
@@ -45,6 +90,7 @@ def absa_forward(
 
     Args:
         model (Union[XLMRobertaForABSA, XLMRobertaXLForABSA]): XLM RoBERTa model for aspect-based sentiment analysis (base, large, XL, or XXL)
+        encoder_module_name (str): Name of the encoder module in the model
         input_ids (torch.LongTensor): Input IDs
         attention_mask (torch.FloatTensor): Attention mask
         aspect_mask (torch.BoolTensor): Aspect mask, indicating which tokens correspond to the aspect
@@ -53,15 +99,18 @@ def absa_forward(
     Returns:
         Tuple[torch.Tensor]: Logits (in prediction mode) or loss and logits (in training mode)
     """
+    # Get the encoder module from the model
+    encoder = getattr(model, encoder_module_name)
+
     # Call the RoBERTa encoder to get contextualized embeddings
-    output_roberta = model.roberta(
+    encoder_output = encoder(
         input_ids=input_ids,
         attention_mask=attention_mask,
         output_attentions=False,
         output_hidden_states=False,
         return_dict=False,
     )
-    intermediate_output = output_roberta[0]
+    intermediate_output = encoder_output[0]
 
     # Get max pooling of tokens for all aspects
     fill_mask = aspect_mask.unsqueeze(-1).eq(0)  # bsz x max_len x 1
