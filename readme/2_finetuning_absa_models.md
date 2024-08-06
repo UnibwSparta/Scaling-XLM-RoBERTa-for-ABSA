@@ -314,7 +314,7 @@ trainer.train()
 
 ### Fine-tuning Results
 
-We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) to train differently sized XLM-RoBERTa models without dedicated hyper parameter search. Training results for the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) with the ABSA model are shown in the table below. We conducted three runs for every setup evaluating on the test set and provide result ranges.
+We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) to train differently sized XLM-RoBERTa models without dedicated hyper parameter search. Training results for the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) with the ABSA model are shown in the table below. We conducted three runs for every setup evaluating on the test set and provide result ranges to showcase the effect of scaling.
 
 | **model** | **macro F1** | **accuracy** | **min\_gpus** | **min\_gpu\_size** |
 | :-- | :-- | :-- | :-- | :-- |
@@ -323,6 +323,6 @@ We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-
 | [xlm-roberta-xl](https://huggingface.co/facebook/xlm-roberta-xl) | 79-80% | 81-83% | 2 | 32 |
 | [xlm-roberta-xxl](https://huggingface.co/facebook/xlm-roberta-xxl) | 81-82% | 83-84% | 4 | 40 |
 
-In comparison, the most recent ensemble approach by [Yang and Li (2024)](https://arxiv.org/pdf/2110.08604) named *LSAE-X-DeBERTa* achieve macro F1 scores over 84% and accuracy over 86%. Provided [PyABSA](https://github.com/yangheng95/PyABSA) package is worth looking at.
+In comparison, a more recent ensemble approach by [Yang and Li (2021)](https://arxiv.org/pdf/2110.08604) named *LSAE-X-DeBERTa* achieves macro F1 scores over 84% and accuracy over 86% on the same dataset. Provided [PyABSA](https://github.com/yangheng95/PyABSA) package is worth looking at.
 
 ### Using a Fine-tuned Model
