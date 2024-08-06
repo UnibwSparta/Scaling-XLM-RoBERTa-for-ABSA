@@ -126,7 +126,7 @@ def absa_forward(
     )
     intermediate_output = encoder_output[0]
 
-    # Get max pooling of tokens for all aspects
+    # Get max pooling of the aspect embeddings
     fill_mask = aspect_mask.unsqueeze(-1).eq(0)  # bsz x max_len x 1
     intermediate_for_aspect = intermediate_output.masked_fill(fill_mask, -10000.0)
     preds, _ = intermediate_for_aspect.max(dim=1)
