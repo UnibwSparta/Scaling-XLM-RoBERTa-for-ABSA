@@ -8,6 +8,7 @@ from transformers import (
     XLMRobertaXLForSequenceClassification,
     DebertaV2ForSequenceClassification,
     ElectraForSequenceClassification,
+    ErnieForSequenceClassification,
 )
 
 
@@ -73,6 +74,19 @@ class ElectraForABSA(ElectraForSequenceClassification):
         labels: Optional[torch.LongTensor] = None,
     ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
         return absa_forward(self, "electra", input_ids, attention_mask, aspect_mask, labels)
+
+
+class ErnieForABSA(ErnieForSequenceClassification):
+    """Aspect-based sentiment analysis model based on ernie-base/large for sequence classification."""
+
+    def forward(
+        self,
+        input_ids: torch.LongTensor,
+        attention_mask: torch.FloatTensor,
+        aspect_mask: torch.BoolTensor,
+        labels: Optional[torch.LongTensor] = None,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+        return absa_forward(self, "ernie", input_ids, attention_mask, aspect_mask, labels)
 
 
 def absa_forward(

@@ -20,6 +20,12 @@ To run this script use accelerate within poetry environment:
    - For (m)DeBerta-base or -large model:
         poetry run accelerate launch --config_file accelerate_configs/deberta.yaml finetune_absa.py
 
+   - For ELECTRA-base or -large model:
+        poetry run accelerate launch --config_file accelerate_configs/electra.yaml finetune_absa.py
+
+   - For ERNIE-base or -large model:
+        poetry run accelerate launch --config_file accelerate_configs/ernie.yaml finetune_absa.py
+
 Before running complete TODO 1 and TODO 2 tasks in the script by uncommenting the model you want to use.
 """
 
@@ -42,10 +48,14 @@ from sparta.absa.metrics import get_metrics_function
 # - XLMRobertaForABSA is the xlm-roberta-base or -large model
 # - XLMRobertaXLForABSA is the xlm-roberta-xl or -xxl model
 # - DebertaForABSA is the (m)deberta-v3-base or -large model
+# - ElectraForABSA is the electra-base or -large model
+# - ErnieForABSA is the ernie-2.0-base or -large model
 from sparta.absa.models import RobertaForABSA as ModelForABSA
 # from sparta.absa.models import XLMRobertaForABSA as ModelForABSA
 # from sparta.absa.models import XLMRobertaXLForABSA as ModelForABSA
 # from sparta.absa.models import DebertaForABSA as ModelForABSA
+# from sparta.absa.models import ElectraForABSA as ModelForABSA
+# from sparta.absa.models import ErnieForABSA as ModelForABSA
 
 # TODO 2: Ucomment the model you want to use
 model_name = "roberta-base"
@@ -57,6 +67,10 @@ model_name = "roberta-base"
 # model_name = "microsoft/mdeberta-v3-base"
 # model_name = "microsoft/deberta-v3-base"
 # model_name = "microsoft/deberta-v3-large"
+# model_name =  "google/electra-base-discriminator"
+# model_name =  "google/electra-large-discriminator"
+# model_name =  "nghuyong/ernie-2.0-base-en"
+# model_name =  "nghuyong/ernie-2.0-large-en"
 
 # NOTE: It makes sense to first download the large models to a local path and then use it
 # model_name = "/path_to_local/xlm-roberta-xl/"
@@ -142,9 +156,9 @@ if __name__ == "__main__":
     #           You can still use the original tokenizer, of you don't store it, but it makes things easier later.
 
     # Save model weights w/o optimizer and scheduler states and tokenizer
-    # store_path = f"absa_models/{model_name}"
-    # trainer.save_model(store_path)
+    store_path = f"absa_models/{model_name}"
+    trainer.save_model(store_path)
 
-    # # Additionally save the tokenizer at the same location
-    # tokenizer = AutoTokenizer.from_pretrained(model_name)
-    # tokenizer.save_pretrained(store_path)
+    # Additionally save the tokenizer at the same location
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer.save_pretrained(store_path)

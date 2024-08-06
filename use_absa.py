@@ -5,14 +5,26 @@
 
 To run this script use accelerate within poetry environment:
 
-    - For XLM-RoBERTA-base or -large model:
+    - For RoBERTA-base or -large model:
         poetry run accelerate launch --config_file accelerate_configs/roberta.yaml use_absa.py
 
+    - For XLM-RoBERTA-base or -large model:
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_base_large.yaml use_absa.py
+
     - For XLM-RoBERTA-XL model:
-        poetry run accelerate launch --config_file accelerate_configs/roberta_xl.yaml use_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xl.yaml use_absa.py
 
     - For XLM-RoBERTA-XXL model:
-        poetry run accelerate launch --config_file accelerate_configs/roberta_xxl.yaml uses_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xxl.yaml use_absa.py
+
+   - For (m)DeBerta-base or -large model:
+        poetry run accelerate launch --config_file accelerate_configs/deberta.yaml use_absa.py
+
+   - For ELECTRA-base or -large model:
+        poetry run accelerate launch --config_file accelerate_configs/electra.yaml use_absa.py
+
+   - For ERNIE-base or -large model:
+        poetry run accelerate launch --config_file accelerate_configs/ernie.yaml use_absa.py
 
 Before running complete TODO 1 and TODO 2 tasks in the script by uncommenting the model you want to use.
 """
@@ -28,16 +40,33 @@ from sparta.absa.aspects import prepare_dataset_for_absa_laptop_2014
 
 
 # TODO 1: Uncomment the model you want to use:
-# - XLMRobertaForABSA is the base or large model
-# - XLMRobertaXLForABSA is the XL or XXL model
-from sparta.absa.models import XLMRobertaForABSA as XLMRobertaForABSA
-# from sparta.absa.models import XLMRobertaXLForABSA as XLMRobertaForABSA
+# - RobertaForABSA is the roberta-base or -large model
+# - XLMRobertaForABSA is the xlm-roberta-base or -large model
+# - XLMRobertaXLForABSA is the xlm-roberta-xl or -xxl model
+# - DebertaForABSA is the (m)deberta-v3-base or -large model
+# - ElectraForABSA is the electra-base or -large model
+# - ErnieForABSA is the ernie-2.0-base or -large model
+from sparta.absa.models import RobertaForABSA as ModelForABSA
+# from sparta.absa.models import XLMRobertaForABSA as ModelForABSA
+# from sparta.absa.models import XLMRobertaXLForABSA as ModelForABSA
+# from sparta.absa.models import DebertaForABSA as ModelForABSA
+# from sparta.absa.models import ElectraForABSA as ModelForABSA
+# from sparta.absa.models import ErnieForABSA as ModelForABSA
 
 # TODO 2: Ucomment the model you want to use. You need to train the model first. See: finetune_absa.py
-model_path = "absa_models/xlm-roberta-base"
+model_path = "absa_models/roberta-base"
+# model_path = "absa_models/roberta-large"
+# model_path = "absa_models/xlm-roberta-base"
 # model_path = "absa_models/xlm-roberta-large"
 # model_path = "absa_models/facebook/xlm-roberta-xl"
 # model_path = "absa_models/facebook/xlm-roberta-xxl"
+# model_path = "absa_models/facebook/mdeberta-v3-base"
+# model_path = "absa_models/facebook/deberta-v3-base"
+# model_path = "absa_models/facebook/deberta-v3-large"
+# model_path = "absa_models/google/electra-base-discriminator"
+# model_path = "absa_models/google/electra-large-discriminator"
+# model_path = "absa_models/nghuyong/ernie-2.0-base-en"
+# model_path = "absa_models/nghuyong/ernie-2.0-large-en"
 
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -46,7 +75,7 @@ warnings.simplefilter(action="ignore", category=UserWarning)
 
 def predict_batch(
     accelerator: Accelerator,
-    model: XLMRobertaForABSA,
+    model: ModelForABSA,
     batch: Dict[str, torch.Tensor],
 ) -> List[str]:
     """Predict the class labels for a batch of examples for aspect-based sentiment analysis.
@@ -108,7 +137,7 @@ if __name__ == "__main__":
     batch = data[:batch_size]
 
     # Load the model
-    model = XLMRobertaForABSA.from_pretrained(model_path)
+    model = ModelForABSA.from_pretrained(model_path)
 
     # Prepare the model for distributed usage
     accelerator = Accelerator()
@@ -120,9 +149,9 @@ if __name__ == "__main__":
     # Truncate the predictions to the original batch size in case that N was not multiple of the number of GPUs
     pred_labels = pred_labels[:batch_size]
 
-    # Print your predictions
+    # Print your predictions by the main process
     for text, aspect, true_label, pred_label in zip(batch["text"], batch["aspect"], batch["labels"], pred_labels):
-        print(f"Text: {text}")
-        print(f"True label: {model.config.id2label[true_label]}")
-        print(f"Predicted label: {pred_label}")
-        print()
+        accelerator.print(f"Text: {text}")
+        accelerator.print(f"True label: {model.config.id2label[true_label]}")
+        accelerator.print(f"Predicted label: {pred_label}")
+        accelerator.print()
