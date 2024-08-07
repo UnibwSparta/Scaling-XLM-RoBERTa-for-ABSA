@@ -1,25 +1,25 @@
 ## Using (Large) Language Models for Text Classification
 
-This article provides a brief tutorial on how to use some common Transformer-based language models for text classification. Here we focus on the [sentiment analysis](https://paperswithcode.com/task/sentiment-analysis) task and showcase differences to the [stance detection](https://doi.org/10.1016/j.ipm.2021.102597) task. In this tutorial we use the HuggingFace [plattform](https://huggingface.co/) and [framework](https://github.com/huggingface/transformers) to access and run pre-trained language models.
+This article provides a brief tutorial on how to use some common Transformer-based language models for text classification. Here, we focus on the [sentiment analysis](https://paperswithcode.com/task/sentiment-analysis) task and shohighlight differences to the [stance detection](https://doi.org/10.1016/j.ipm.2021.102597) task. In this tutorial, we use the HuggingFace [plattform](https://huggingface.co/) and [framework](https://github.com/huggingface/transformers) to access and run pre-trained language models.
 
 ### Sentiment Analysis Models
 
-In general, the sentiment analysis aims to derive author's sentiment (affective state) towards something by inspecting his/her statement, e.g., text. In it's core, sentiment analysis focuses a lot on sentimental signal words in specific contexts. On the HuggingFace plattform you can find very different models that have been pre-trained and fine-tuned specifically to solve the task of sentiment analysis. This task can have very different characteristics depending on:
+In general, sentiment analysis aims to derive author's sentiment (affective state) towards something by inspecting their statement, e.g., text. At it's core, sentiment analysis focuses on sentimental signal words in specific contexts. On the HuggingFace plattform, you can find a veriety of models that have been pre-trained and fine-tuned specifically to solve the task of sentiment analysis. This task can have very different characteristics depending on:
 
-- number of sentiment classes, e.g.
+- **Number of sentiment classes**, e.g.:
     - [one-way (binary regression)](https://en.wikipedia.org/wiki/Binary_regression) - a score from 0 to 100
     - [two-way classification](https://paperswithcode.com/sota/sentiment-analysis-on-sst-2-binary) - negative vs. positive
     - [three-way classification](https://ieee-dataport.org/open-access/coronavirus-covid-19-tweets-dataset) - also considering neutral class
     - [fine-grained five-star classification](https://paperswithcode.com/sota/sentiment-analysis-on-sst-5-fine-grained)
-- target of classification, e.g.
+- **Target of classification**, e.g.:
     - [whole text](https://aclanthology.org/S17-2088/) - no specific target or implicit target
     - [target-dependent](https://ieeexplore.ieee.org/document/8448158) - single or multiple targets
     - [aspect-based](https://paperswithcode.com/sota/aspect-based-sentiment-analysis-on-semeval-5) - multiple aspects of a single target
     - [targeted aspect-based](https://arxiv.org/pdf/1906.06945.pdf) - multiple aspects of different targets
-- language (monolingual, e.g., German, or multilingual)
-- domain, e.g., sentiment of [movie reviews](https://paperswithcode.com/sota/sentiment-analysis-on-imdb) or [product revews](https://paperswithcode.com/dataset/amazon-review)
-- text quality, e.g., considering the language used in news paper articles of very high quality and the language used on social media networks of low quality (noisy)
-- text length, e.g., tweets are very short while news articles can be very long, thus, even exceeding the model's maximum input sequence length
+- **Language** (monolingual, e.g., German, or multilingual)
+- **Domain**, e.g., sentiment of [movie reviews](https://paperswithcode.com/sota/sentiment-analysis-on-imdb) or [product revews](https://paperswithcode.com/dataset/amazon-review)
+- **Text quality**, e.g., considering the language used in newspaper articles of very high quality versus the language used on social media networks, which is often of low quality (noisy)
+- **Text length**, e.g., tweets are very short while news articles can be very long, potentially exceeding the model's maximum input sequence length
 
 Here are some example models for sentiment analysis from HuggingFace:
 
@@ -42,20 +42,20 @@ Here are some example models for sentiment analysis from HuggingFace:
 
 ### Stance Detection Models
 
-In contrast to sentiment analysis, the task of stance detection aims to classify author's stance (position) towards something. Stance can depend on sentimental signal words. In this sense, it is related to sentiment analysis. However, sentiment may be also misleading, since a position against something might be expressed with a positive sentiment as well, e.g., as ironie. Therefore, stance detection is a more complex task. It can be
+In contrast to sentiment analysis, the task of stance detection aims to classify author's stance (position) towards something. Stance can depend on sentimental signal words, making it related to sentiment analysis. However, sentiment may be also misleading, as a position against something might be expressed with a positive sentiment, e.g., as irony. Therefore, stance detection is a more challenging task. It can be characterized by:
 
-- number of classes, e.g.
+- **Number of classes**, e.g.:
     - [two-way](https://aclanthology.org/2021.findings-acl.208.pdf)
     - [three-way](https://huggingface.co/datasets/mlburnham/PoliStance_Affect)
     - [four-way](https://dl.acm.org/doi/pdf/10.1145/3161603)
-    - etc. - number and semantic of classes can be very different and depending on the specific case
-- target of classification
+    - etc. (number and semantic of classes can be vary widely depending on the specific case)
+- **Target of classification**, e.g.:
     - [whole text](https://journalqd.org/article/view/5896)
     - [entity-/target-dependent](https://aclanthology.org/S16-1003.pdf)
     - [pair of targets](https://aclanthology.org/E17-2088.pdf)
     - [multi-target](https://link.springer.com/chapter/10.1007/978-3-031-15086-9_9)
     - [claim-based](https://ceur-ws.org/Vol-2624/paper9.pdf)
-- language, text quality, text length, and **especially domain**
+- **Language**, **text quality**, **text length**, and especially **domain**
 
 Here are some example models for stance detection from HuggingFace. As can be seen, data domains used for stance detection are much more specific compared to sentiment analysis and frequently focus on dedicated topics or issues:
 
@@ -77,7 +77,7 @@ Here are some example models for stance detection from HuggingFace. As can be se
 
 ### Trivial Example of Usage
 
-The majority of models for text classification that are published on the HuggingFace plattform are usually easy to use. One just need an installed [Python distribution](https://www.python.org/about/gettingstarted/), some basic skills in using a [command line](https://www.freecodecamp.org/news/command-line-for-beginners/#shell) in a shell, and access to at least one GPU (or many CPUs). It is recommended to use a [virtual environment](https://realpython.com/python-virtual-environments-a-primer/) dedicated to one Python project, instead of installing necessary Python packages system-wide. Most convinient choice is frequently [Anaconda](https://docs.anaconda.com/anaconda/install/). For more advanced users, [Poetry](https://python-poetry.org/) is a good choice as well.
+The majority of models for text classification published on the HuggingFace plattform are usually easy to use. One just need an installed [Python distribution](https://www.python.org/about/gettingstarted/), some basic skills in using a [command line](https://www.freecodecamp.org/news/command-line-for-beginners/#shell) in a shell, and access to at least one GPU (or many CPUs). It is recommended to use a [virtual environment](https://realpython.com/python-virtual-environments-a-primer/) dedicated a specific Python project, instead of installing necessary Python packages system-wide. Most convinient choice is frequently [Anaconda](https://docs.anaconda.com/anaconda/install/). For more advanced users, [Poetry](https://python-poetry.org/) is a good choice as well.
 
 * Install packages into your new Python virtual environment, e.g., for AnaConda:
 
@@ -131,7 +131,7 @@ The majority of models for text classification that are published on the Hugging
     print(result)
     ```
 
-* Run your script either within
+* Run your script either within:
     - AnaConda `python my_script.py`, or
     - Poetry `poetry run python my_script.py`
 
@@ -141,8 +141,8 @@ The majority of models for text classification that are published on the Hugging
     [{'label': 'Negative', 'score': 0.988707423210144}]
     ```
 
-This trivial example shows how simple it is to use a fine-tuned language model that needs only one text as input. You may also pass a list of texts to the pipeline to get all the results at once.
+This trivial example shows how simple it is to use a fine-tuned language model that requires only one text as input. You may also pass a list of texts to the pipeline to get all the results at once.
 
-If necessary, it is posssible to fine-tune (train) a base model on a specific dataset, e.g., for sentiment analysis or stance detection. As long as you classify the whole input text, you can rely on [widely provided tutorials](https://huggingface.co/learn/nlp-course/chapter3/3) to achieve this.
+If necessary, it is posssible to fine-tune (train) a base model on a specific dataset, e.g., for sentiment analysis or stance detection. As long as you are classifying the entire input text, you can rely on [widely provided tutorials](https://huggingface.co/learn/nlp-course/chapter3/3) to achieve this.
 
 On a separate page, we provide a more complex tutorial on [how to run and fine-tune aspect-based sentiment analysis models for different model sizes on one or multiple GPUs](./2_finetuning_absa_models.md).
