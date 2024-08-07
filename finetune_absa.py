@@ -3,6 +3,8 @@
 
 """finetune_absa.py: Fine-tune a model for aspect-based sentiment analysis using FSDP.
 
+Before running complete TODO 1 and TODO 2 tasks in the script by uncommenting the model you want to use.
+
 To run this script use accelerate within poetry environment:
 
     - For RoBERTA-base or -large model:
@@ -25,8 +27,6 @@ To run this script use accelerate within poetry environment:
 
    - For ERNIE-base or -large model:
         poetry run accelerate launch --config_file accelerate_configs/ernie.yaml finetune_absa.py
-
-Before running complete TODO 1 and TODO 2 tasks in the script by uncommenting the model you want to use.
 """
 
 import warnings
@@ -50,10 +50,10 @@ from sparta.absa.metrics import get_metrics_function
 # - DebertaForABSA is the (m)deberta-v3-base or -large model
 # - ElectraForABSA is the electra-base or -large model
 # - ErnieForABSA is the ernie-2.0-base or -large model
-from sparta.absa.models import RobertaForABSA as ModelForABSA
+# from sparta.absa.models import RobertaForABSA as ModelForABSA
 # from sparta.absa.models import XLMRobertaForABSA as ModelForABSA
 # from sparta.absa.models import XLMRobertaXLForABSA as ModelForABSA
-# from sparta.absa.models import DebertaForABSA as ModelForABSA
+from sparta.absa.models import DebertaForABSA as ModelForABSA
 # from sparta.absa.models import ElectraForABSA as ModelForABSA
 # from sparta.absa.models import ErnieForABSA as ModelForABSA
 
@@ -67,6 +67,8 @@ model_name = "roberta-base"
 # model_name = "microsoft/mdeberta-v3-base"
 # model_name = "microsoft/deberta-v3-base"
 # model_name = "microsoft/deberta-v3-large"
+# model_name = "microsoft/deberta-v2-xlarge"
+model_name = "microsoft/deberta-v2-xxlarge"
 # model_name =  "google/electra-base-discriminator"
 # model_name =  "google/electra-large-discriminator"
 # model_name =  "nghuyong/ernie-2.0-base-en"

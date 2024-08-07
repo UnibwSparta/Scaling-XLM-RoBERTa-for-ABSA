@@ -317,7 +317,7 @@ training_args = TrainingArguments(
 )
 ```
 
-The `metric_for_best_model` needs to correspond to the computed metric of model performance during the training. For this, we create an additional function that can return accuracy and macro F1 score metrics. Please refer also to the [full code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/metrics.py).
+The `metric_for_best_model` corresponds to the computed metric of model performance during the training. Evauation loss `eval_loss` is returned directly by the model. To compute other metrics `eval_accuracy` and `eval_f1`, we write an additional function that returns accuracy and macro F1 score metrics. Please refer also to the [full code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/metrics.py).
 
 ```python
 from typing import Dict
@@ -340,7 +340,7 @@ def compute_metrics_function(eval_pred: EvalPrediction) -> Dict[str, float]:
     return metrics
 ```
 
-This metrics function is then passed to the Trainer class as an argument. Additionally, we provide an early stopping criteria that will use metric name given in `metric_for_best_model` to finish the training procedure. That's why the number of epochs—passed in training arguments—can be high.
+The metrics function is then passed to the Trainer class as an argument. Additionally, we provide an early stopping criteria that will use metric name given in `metric_for_best_model` to finish the training procedure. The number of epochs—passed in training arguments—can be set high, becuase early stopping will finish the training in our case.
 
 ```python
 trainer = Trainer(
@@ -355,7 +355,7 @@ trainer = Trainer(
 trainer.train()
 ```
 
-The Trainer will save the model checkpoints during the training to the given `absa_checkpoints` directory. Those include model weights, optimizer, and scheduler states, but not the tokenizer. Checkpoints are good for re-initializing the training procedure. For production, only weights and tokenizer are important. It makes sense to store those two artefacts at the same position for later usage:
+The Trainer will save the model checkpoints during the training to the `absa_checkpoints` directory. Those include model weights, optimizer, and scheduler states, but not a tokenizer. Checkpoints are good for re-initializing/continuing the training procedure. For production usage, only model weights and tokenizer are important. It makes sense to store those two artefacts at the same position for later usage after the training has finished:
 
 ```python
 from transformers import AutoTokenizer
@@ -363,7 +363,7 @@ from transformers import AutoTokenizer
 store_path = f"absa_models/{model_name}"
 trainer.save_model(store_path)
 
-# Additionally save the tokenizer at the same location
+# Additionally save a cpoy of the original tokenizer at the same location
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 tokenizer.save_pretrained(store_path)
 ```
@@ -372,7 +372,7 @@ Please refer to the [full code of `finetune_absa.py` script](https://github.com/
 
 ### Fine-tuning Results
 
-We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) to train differently sized (XLM-)RoBERTa and (m)Deberta models without dedicated hyper parameter search. The training results for the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) with the ABSA model are shown in the table below. We conducted three runs for every setup evaluating on the test set and provide rounded result ranges to showcase the effect of scaling, multilinguality, and model architecture.
+We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) to train differently sized (XLM-)RoBERTa and (m)Deberta v2/v3 models without dedicated hyper parameter search. The training results for the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) with described ABSA model are shown in the table below. We conducted three runs for every setup evaluating on the test set and provide here the rounded result ranges to examplarly showcase the effect of scaling, multilinguality, and model architecture.
 
 | **roberta model** | **language** | **dimension** | **macro F1** | **accuracy** | **min\_gpus** | **min\_gpu\_size** |
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
@@ -387,18 +387,20 @@ We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
 | [deberta-v3-base](https://huggingface.co/microsoft/deberta-v3-base) | English | base | 77-80% | 81-83% | 1 | 8 |
 | [deberta-v3-large](https://huggingface.co/microsoft/deberta-v3-large) | English | large | 81-82% | 84-85% | 1 | 16 |
+| [deberta-v2-xlarge](https://huggingface.co/microsoft/deberta-v2-xlarge) | English | large | 81-83% | 84-85% | 1 | 24 |
+| [deberta-v2-xxlarge](https://huggingface.co/microsoft/deberta-v2-xxlarge) | English | large | 82-83% | 85-86% | 1 | 24 |
 | [mdeberta-v3-base](https://huggingface.co/microsoft/mdeberta-v3-base) |  multilingual | base | 72-76% | 77-80% | 1 | 8 |
 
 
-Comparing the results show that:
+The results show in particular that:
 
-* Scaling improves the performance slowly, e.g.  `xlm-roberta-base`, `-large`, `-xl`, and `-xxl`.
-* Monolingual English models perform better than multilingual models, e.g. `roberta-base` vs `xlm-roberta-base`, or `deberta-v3-base` vs. `mdeberta-v-3-base`. However, the multilingual models are sometimes the only choice for other languages.
-* `deberta-v3-large` model performs slightly better than equally sized `roberta-large` on this dataset. In general, Deberta models are known to outperform RoBERTa models. A more recent ensemble approach of 3 Deberta-based models by [Yang and Li (2021)](https://arxiv.org/pdf/2110.08604) named *LSA<sub>E</sub>-X-DeBERTa* achieves macro F1 scores over 84% and accuracy over 86% on the same dataset. Provided [PyABSA](https://github.com/yangheng95/PyABSA) package is worth looking at.
+* Scaling improves the performance on this task slowly, e.g. compare the results for `xlm-roberta-base`, `-large`, `-xl`, and `-xxl`.
+* Monolingual English models perform better than multilingual models, e.g. compare `roberta-base` vs. `xlm-roberta-base`, or `deberta-v3-base` vs. `mdeberta-v-3-base`. However, the multilingual models are sometimes the only choice for other languages you have. Disappointing is that multilingual very large `xlm-roberta-xxl` model achieves very similar results compared to the much smaller English model `roberta-large`. Nonetheless, we do not rule out that a better hyperparameter search may increase the performance gap here.
+* `deberta-v3-large` model performs slightly better than equally sized `roberta-large` on this dataset. In general, [Deberta models are known to outperform RoBERTa models](https://github.com/microsoft/DeBERTa?tab=readme-ov-file#fine-tuning-on-nlu-tasks) by 2-3 points of macro F1 score. A more recent ensemble approach of 3 `deberta-v3-large`-based models by [Yang and Li (2021)](https://arxiv.org/pdf/2110.08604) named *LSA<sub>E</sub>-X-DeBERTa* achieves macro F1 scores over 84% and accuracy over 86% on the same dataset. Provided [PyABSA](https://github.com/yangheng95/PyABSA) package is worth looking at.
 
 ### Using the Fine-tuned Model
 
-In contrast to the training procedure, we cannot use the [Evaluator](https://huggingface.co/docs/evaluate/package_reference/evaluator_classes#evaluator) class from the HuggingFace `transformers` framework in a similar way we used the Trainer class. The Trainer class handled the FSDP appoach for model distribution over multiple GPUs. For evauation, this need to be implemented with the functionality of `accelerate` framework. Therefore, we create a script `use_absa.py` that we will run later with the `accelerate` tool.
+In contrast to the training procedure, we cannot use the [Evaluator](https://huggingface.co/docs/evaluate/package_reference/evaluator_classes#evaluator) class from the HuggingFace's `transformers` framework in a similar way we used the Trainer class. The Trainer class handled the FSDP appoach for model distribution over multiple GPUs. For evauation, this need to be implemented with the functionality of `accelerate` framework manually. Therefore, we create a script `use_absa.py` that we will run later with the `accelerate` tool.
 
 ```
 accelerate launch --config_file accelerate.cfg use_absa.py
@@ -417,7 +419,7 @@ accelerator = Accelerator()
 model = accelerator.prepare(model)
 ```
 
-As example, we use the test set from the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops). First, the test dataset need to be prepared in the same way. We use the [preparation function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36) `prepare_dataset_for_absa_laptop_2014` elaborated in the previous section of this tutorial. Only a part of dataset is needed for a fast test, e.g. 16 items. But be aware that the amount of items should be a multiple of the number of GPUs used.
+As example for model evaluation, we use the test set from the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops). First, the test dataset need to be prepared in the same way we did for training. We use the [preparation function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36) `prepare_dataset_for_absa_laptop_2014` elaborated in the previous section of this tutorial. Only a small part of dataset is needed for a simple test, e.g. 16 items. But be aware that the amount of items should be a multiple of the number of GPUs used.
 
 ```python
 from datasets import load_dataset
@@ -432,12 +434,12 @@ data = prepare_dataset_for_absa_laptop_2014(dataset["test"], model_path)
 # IMPORTANT: N must be a multiple of the number of GPUs used,
 #            otherwise accelerator.prepare() on batch will fill up
 #            the missing items with the first items in the batch
-#            and you will need to manually remove them from predictions.
+#            and you will need to manually remove them from predictions afterwards.
 batch_size = 16
 batch = data[:batch_size]
 ```
 
-In the next step the batch is prepared for distributed usage on multiple GPUs. Actually, it is splitted in equal parts. Then the prediction is conducted in different processes on multiple GPUs. In the aftermath, we need to collect different predictions from all GPUs to gather them to a single vector.
+In the next step, the batch is prepared for distributed usage on multiple GPUs. Actually, it is splitted in equal parts—one part per GPU. Then the prediction is conducted in different processes on multiple GPUs. In the aftermath, we need to collect different predictions from all GPUs to gather them to a single vector.
 
 ```python
 # Prepare the batch for distributed prediction
@@ -456,7 +458,7 @@ with torch.no_grad():
 logits = accelerator.gather(logits_per_device)
 ```
 
-After having gathered logits from all GPUs, all the running parallel processes have now the same state. Upon the gathered logits, we derive probabilities, and then predicted classes.
+After having gathered logits from all GPUs, all the running parallel processes have the same state. From the collected logits we derive probabilities and then predict classes.
 
 ```python
 # Apply softmax to get probabilities
@@ -490,4 +492,4 @@ for text, aspect, true_label, pred_label in zip(batch["text"], batch["aspect"], 
     accelerator.print()
 ```
 
-Please refer to the [full code of `use_absa.py` script](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/use_absa.py).
+Please refer to the [full code example of `use_absa.py` script](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/use_absa.py).

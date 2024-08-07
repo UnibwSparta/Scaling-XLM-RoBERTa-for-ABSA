@@ -3,6 +3,8 @@
 
 """use_absa.py: Use a model to predict sentiments for aspect-based sentiment analysis using FSDP.
 
+Before running complete TODO 1 and TODO 2 tasks in the script by uncommenting the model you want to use.
+
 To run this script use accelerate within poetry environment:
 
     - For RoBERTA-base or -large model:
@@ -25,8 +27,6 @@ To run this script use accelerate within poetry environment:
 
    - For ERNIE-base or -large model:
         poetry run accelerate launch --config_file accelerate_configs/ernie.yaml use_absa.py
-
-Before running complete TODO 1 and TODO 2 tasks in the script by uncommenting the model you want to use.
 """
 
 from typing import Dict, List
