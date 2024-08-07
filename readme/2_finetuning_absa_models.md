@@ -1,6 +1,6 @@
 ## Fine-tuning BERT-like Models of Different Sizes on Multiple GPUs for Aspect-based Sentiment Analysis (ABSA)
 
-This article provides a detailed tutorial on how to fine-tune differently sized BERT-like language models, such as [XLM-RoBERTa](https://arxiv.org/abs/1911.02116v2) or [(m)DebertaV3](https://arxiv.org/pdf/2111.09543v4), for the specific task of aspect-based sentiment analysis (ABSA) using the approach proposed by [Gao et al. (2019)](https://ieeexplore.ieee.org/abstract/document/8864964) originally for the [BERT](https://arxiv.org/abs/1810.04805?amp=1) model. The implementation uses the HuggingFace frameworks [transformers](https://huggingface.co/docs/transformers) and [accelerate](https://huggingface.co/docs/accelerate/index). We provide a full executable code examples for [fine-tuning an ABSA model](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) and subsequent [evaluation](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/use_absa.py) of the trained model. Please install necesary [requirements](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/requirements.txt) for this tutorial first.
+This article provides a detailed tutorial on how to fine-tune differently sized BERT-like language models, such as [XLM-RoBERTa](https://arxiv.org/abs/1911.02116v2) or [(m)DebertaV3](https://arxiv.org/pdf/2111.09543v4), for the specific task of aspect-based sentiment analysis (ABSA) using the approach proposed by [Gao et al. (2019)](https://ieeexplore.ieee.org/abstract/document/8864964) originally for the [BERT](https://arxiv.org/abs/1810.04805?amp=1) model. The implementation uses the HuggingFace's frameworks [transformers](https://huggingface.co/docs/transformers) and [accelerate](https://huggingface.co/docs/accelerate/index). We provide full executable code examples for [fine-tuning an ABSA model](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) and subsequent [evaluation](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/use_absa.py) of the trained model. Please install the necessary [requirements](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/requirements.txt) for this tutorial first.
 
 ```
 transformers
@@ -14,7 +14,7 @@ sentencepiece==0.1.99
 
 ### Model Architecture
 
-The model architecture introduced by Gao et al. in the paper *[Target-Dependent Sentiment Classification With BERT](https://ieeexplore.ieee.org/abstract/document/8864964)* is shown in the figure below. For classification, the model embeddings corresponding to an aspect term, e.g., *battery timer*, are extracted from the models output. Max or mean pooling is then used to summarize multiple embeddings to one vector. On this vector, a fully connected layer performs the final classification into three classes. We can substitute the BERT model by any BERT-like model, e.g., [XLM-RoBERTA](https://arxiv.org/abs/1911.02116v2), [Deberta](https://arxiv.org/pdf/2111.09543v4), [ELECTRA](https://arxiv.org/pdf/2003.10555v1), [ERNIE](https://arxiv.org/abs/2107.02137), etc.
+The model architecture introduced by Gao et al. in the paper *[Target-Dependent Sentiment Classification With BERT](https://ieeexplore.ieee.org/abstract/document/8864964)* is shown in the figure below. For classification, the model embeddings corresponding to an aspect term, e.g., *battery timer*, are extracted from the model's output. Max or mean pooling is then used to summarize multiple embeddings to a single vector. A fully connected layer performs the final classification into three classes based on this vector. We can substitute the BERT model by any BERT-like model, e.g., [XLM-RoBERTA](https://arxiv.org/abs/1911.02116v2), [Deberta](https://arxiv.org/pdf/2111.09543v4), [ELECTRA](https://arxiv.org/pdf/2003.10555v1), [ERNIE](https://arxiv.org/abs/2107.02137), etc.
 
 [![Model architecture according to Gao et al. (2019)](td-bert-gao-2019.png "Model architecture according to Gao et al. (2019)")](https://ieeexplore.ieee.org/abstract/document/8864964)
 
@@ -22,7 +22,7 @@ The model architecture introduced by Gao et al. in the paper *[Target-Dependent 
 
 ### Preparing a Dataset
 
-As a working example, we take the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) from the [SemEval 2014 Task 4](https://paperswithcode.com/dataset/semeval-2014-task-4-sub-task-2) for aspect-based sentiment analysis. This dataset provides texts with aspect positions, aspects and polarities per aspect. Similarly, a dataset for multi-target stance detection can be used, e.g., [stance towards German politicians and political parties](https://github.com/UnibwSparta/German-Elections-NRW22-Stance-Dataset).
+As a working example, we take the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) from the [SemEval 2014 Task 4](https://paperswithcode.com/dataset/semeval-2014-task-4-sub-task-2) for aspect-based sentiment analysis. This dataset provides texts with aspect positions, aspects, and polarities for each aspect. Similarly, a dataset for multi-target stance detection copuld be used here instead, such as the [stance towards German politicians and political parties](https://github.com/UnibwSparta/German-Elections-NRW22-Stance-Dataset).
 
 ```python
 from datasets import load_dataset
@@ -32,7 +32,7 @@ ds_train = dataset["train"]
 ds_test = dataset["test"]
 ```
 
-To be able extracting correct embeddings from the model, we need to map aspect words to model tokens. This can be achieved by HuggingFace's function [BatchEncoding.char_to_token()](https://huggingface.co/docs/transformers/main_classes/tokenizer#transformers.BatchEncoding.char_to_token), which returns corresponding token positions for every character of the original input sentence. First, we use model's tokenizer to create `BatchEncoding` objects for all dataset items. In this case, maximal length of 100 model tokens is sufficient to accomodate any text from the given dataset.
+To correctly extract embeddings from the model, we need to map aspect words to model tokens. This can be achieved using HuggingFace's function [BatchEncoding.char_to_token()](https://huggingface.co/docs/transformers/main_classes/tokenizer#transformers.BatchEncoding.char_to_token), which returns corresponding token positions for each character of the original input text. First, we use model's tokenizer to create `BatchEncoding` objects for all dataset items. In this case, a maximum length of 100 model tokens is sufficient to accomodate any text from the given dataset.
 
 ```python
 from transformers import AutoTokenizer
@@ -41,7 +41,7 @@ tokenizer = AutoTokenizer.from_pretrained('roberta-base')
 batch_encoding = tokenizer(ds_train["text"], padding="max_length", max_length=100, truncation=True)
 ```
 
-Second, we use [BatchEncoding.char_to_token()](https://huggingface.co/docs/transformers/main_classes/tokenizer#transformers.BatchEncoding.char_to_token) to create a function `get_aspect_mask()` for extracting all aspect tokens using the start and end positions for aspect within the original text. From resulting token positions we build boolean aspect mask for model input. Boolean masks are used later in the model to extract aspect embeddings.
+Second, we use [BatchEncoding.char_to_token()](https://huggingface.co/docs/transformers/main_classes/tokenizer#transformers.BatchEncoding.char_to_token) to create a function `get_aspect_mask()` for extracting all aspect tokens using the start and end positions for the aspect within the original text. From resulting token positions, we build a boolean aspect mask for model input. Boolean masks are later used in the model to extract aspect embeddings.
 
 ```python
 from typing import List, Set, Tuple
@@ -67,7 +67,7 @@ def get_aspect_mask(
     return token_indices, tokens_mask
 ```
 
-In the aftermath, an additional function `get_all_aspect_masks()` extracts aspect masks from the complete dataset. Please refer to the [full code for this function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L55-L106).
+Subsequently, an additional function `get_all_aspect_masks()` extracts aspect masks from the complete dataset. Please refer to the [full code for this function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L55-L106).
 
 ```python
 _, aspect_masks = get_all_aspect_masks(
@@ -89,13 +89,13 @@ ds_train = ds_train.add_column("aspect_mask", aspect_masks)
 ds_train = ds_train.rename_column("label", "labels")
 ```
 
-Finally, we need to fix the labels' values of the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) to fit classifier output expectations. Labels in the dataset are `[-1, 0, 1]` and need to be `[0, 1, 2]`. Thus, a simple incrementation fixes it.
+Finally, we need to adjust the labels in the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) to match classifier's output expectations. Labels in the dataset are `[-1, 0, 1]` and need to be `[0, 1, 2]`. Thus, a simple incrementation fixes this issue.
 
 ```python
 ds_train = ds_train.map(lambda example: example["labels"] = example["labels"] + 1)
 ```
 
-After all these steps, items in the training dataset look in the following way:
+After completing these steps, items in the training dataset look as follows:
 
 ```python
 {
@@ -110,18 +110,18 @@ After all these steps, items in the training dataset look in the following way:
 }
 ```
 
-We repeat the steps conducted for `ds_train` dataset split for `ds_test` as well. Please refer to the [complete code example for dataset split preparation](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36).
+We repeat the steps performed for the `ds_train` dataset split for the `ds_test` as well. Please refer to the [complete code example for dataset split preparation](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36).
 
 ### Create a Model
 
-Unfortunately, the HuggingFace framework does not provide a dedicated model for aspect-based sentiment analysis. Thus, we need to derive a class for sequence classification model and adapt it:
+Unfortunately, the HuggingFace framework does not provide a dedicated model for aspect-based sentiment analysis. Therefore, we need to derive from an existing class for sequence classification model and adapt it:
 
 * For `roberta-base` and `-large` - [RobertaForSequenceClassification](https://huggingface.co/docs/transformers/v4.43.4/en/model_doc/roberta#transformers.RobertaForSequenceClassification)
 * For `xlm-roberta-base` and `-large` - [XLMRobertaForSequenceClassification](https://huggingface.co/docs/transformers/v4.43.4/en/model_doc/xlm-roberta#transformers.XLMRobertaForSequenceClassification)
 * For `facebook/xlm-roberta-xl` and `-xxl` - [XLMRobertaXLForSequenceClassification](https://huggingface.co/docs/transformers/model_doc/xlm-roberta-xl#transformers.XLMRobertaXLForSequenceClassification)
 * For `microsoft/(m)deberta-v3-base` and `-large` - [DebertaV2ForSequenceClassification](https://huggingface.co/docs/transformers/model_doc/deberta-v2#transformers.DebertaV2ForSequenceClassification)
 
-Derived model need to provide the `forward()` method that takes all necessary parameters from our dataset, i.e., input IDs, attention masks, aspect masks, and labels.
+The derived model needs to implement the `forward()` method, which takes all necessary parameters from our dataset, i.e., input IDs, attention masks, aspect masks, and labels.
 
 ```python
 from typing import Optional
@@ -156,12 +156,12 @@ class ModelForABSA(RobertaForSequenceClassification):
         ...
 ```
 
-The procedure of the forward pass in detail is:
+The procedure of the forward pass is as follows:
 
-1. to call the underlying encoder and take the complete intermediate output,
-2. to extract aspect embeddings and to max-pool them (code lines originally from [Dai et al. (2021)](https://github.com/ROGERDJQ/RoBERTaABSA/blob/main/Train/finetune.py#L166-L168)),
-3. to apply fully connected classifier,
-4. to compute cross entropy loss, if labels are provided.
+1. Call the underlying encoder and obtain the complete intermediate output,
+2. Extract aspect embeddings and apply max-pooling (see code lines originally from [Dai et al. (2021)](https://github.com/ROGERDJQ/RoBERTaABSA/blob/main/Train/finetune.py#L166-L168)),
+3. Apply fully connected classifier,
+4. Compute cross entropy loss, if labels are provided.
 
 ```python
 # (1) Call the RoBERTa encoder to get contextualized embeddings
@@ -196,7 +196,7 @@ if labels is not None:
     loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
 ```
 
-The `forward()` method will return model predictions as logits and additionally the loss if labels are provided.
+The `forward()` method will return model predictions as logits and, if labels are provided, also return the loss.
 
 ```python
 output = (logits,)
@@ -233,7 +233,7 @@ model = ModelForABSA.from_pretrained(model_name, config=config)
 
 ### Model Fine-tuning
 
-Thanks to the HuggingsFace's [Trainer](https://huggingface.co/docs/transformers/main_classes/trainer) class, the fine-tuning procedure is straight forward to implement. The Trainer supports training on single or multiple GPUs. For our use case, we focus on multi-GPU setup and train models with [Fully Sharded Data Parallel (FSDP)](https://pytorch.org/tutorials/intermediate/FSDP_tutorial.html) paradigma. In this case, the training script has to be started with the [accelerate](https://huggingface.co/docs/accelerate/index) tool. The first step is to create a configuration file by running a command:
+Thanks to the HuggingsFace's [Trainer](https://huggingface.co/docs/transformers/main_classes/trainer) class, the fine-tuning procedure is straightforward to implement. The Trainer supports training on single or multiple GPUs. For our use case, we focus on multi-GPU setup and train models using the [Fully Sharded Data Parallel (FSDP)](https://pytorch.org/tutorials/intermediate/FSDP_tutorial.html) paradigm. In this case, the training script must be started with the [accelerate](https://huggingface.co/docs/accelerate/index) tool. The first step is to create a configuration file by running a command:
 
 ```bash
 accelerate config --config_file accelerate.cfg
@@ -276,13 +276,13 @@ tpu_use_sudo: false
 use_cpu: false
 ```
 
-Please refer to the full [configuration examles for different models](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/accelerate_configs/). The training script has to be started in the following way:
+Please refer to the full [configuration examles for different models](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/accelerate_configs/). The training script must be started in the following way:
 
 ```bash
 accelerate launch --config_file accelerate.cfg finetune_absa.py
 ```
 
-Within the `finetune_absa.py` script, we first create training arguments for the Trainer. They include different hyperparameters and settings for Trainer behavior. For instance, how many model checkpoints to safe and how to evaluate the best model.
+Within the `finetune_absa.py` script, we first create training arguments for the Trainer. These include different hyperparameters and settings for Trainer behavior, such as how many model checkpoints to save and how to evaluate the best model.
 
 ```python
 from transformers import TrainingArguments
@@ -317,7 +317,7 @@ training_args = TrainingArguments(
 )
 ```
 
-The `metric_for_best_model` corresponds to the computed metric of model performance during the training. Evauation loss `eval_loss` is returned directly by the model. To compute other metrics `eval_accuracy` and `eval_f1`, we write an additional function that returns accuracy and macro F1 score metrics. Please refer also to the [full code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/metrics.py).
+The `metric_for_best_model` corresponds to the computed metric of model performance during training. Evauation loss `eval_loss` is returned directly by the model. To compute other metrics, such as `eval_accuracy` and `eval_f1`, we write an additional function that returns accuracy and macro F1 score metrics. Please refer also to the [full code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/metrics.py).
 
 ```python
 from typing import Dict
@@ -340,7 +340,7 @@ def compute_metrics_function(eval_pred: EvalPrediction) -> Dict[str, float]:
     return metrics
 ```
 
-The metrics function is then passed to the Trainer class as an argument. Additionally, we provide an early stopping criteria that will use metric name given in `metric_for_best_model` to finish the training procedure. The number of epochs—passed in training arguments—can be set high, becuase early stopping will finish the training in our case.
+The metrics function is then passed to the Trainer class as an argument. Additionally, we provide an early stopping criteria that will use metric name given in `metric_for_best_model` to stop the training procedure. The number of epochs—passed in training arguments—can be set high, because early stopping will terminate the training when appropriate.
 
 ```python
 trainer = Trainer(
@@ -355,7 +355,7 @@ trainer = Trainer(
 trainer.train()
 ```
 
-The Trainer will save the model checkpoints during the training to the `absa_checkpoints` directory. Those include model weights, optimizer, and scheduler states, but not a tokenizer. Checkpoints are good for re-initializing/continuing the training procedure. For production usage, only model weights and tokenizer are important. It makes sense to store those two artefacts at the same position for later usage after the training has finished:
+The Trainer will save the model checkpoints during the training to the `absa_checkpoints` directory. These include model weights, optimizer, and scheduler states, but not the tokenizer. Checkpoints are good for re-initializing or continuing the training procedure. For production use, only model weights and tokenizer are important. It makes sense to store these two artefacts in the same location for later use after the training has finished:
 
 ```python
 from transformers import AutoTokenizer
@@ -372,7 +372,7 @@ Please refer to the [full code of `finetune_absa.py` script](https://github.com/
 
 ### Fine-tuning Results
 
-We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) to train differently sized (XLM-)RoBERTa and (m)Deberta v2/v3 models without dedicated hyper parameter search. The training results for the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) with described ABSA model are shown in the table below. We conducted three runs for every setup evaluating on the test set and provide here the rounded result ranges to examplarly showcase the effect of scaling, multilinguality, and model architecture.
+We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) to train differently sized (XLM-)RoBERTa and (m)Deberta v2/v3 models without dedicated hyperparameter search. The training results for the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) with the described ABSA model are shown in the table below. We conducted three runs for each setup, evaluating on the test set, and provide rounded result ranges to examplarily showcase the effects of scaling, multilinguality, and model architecture.
 
 | **roberta model** | **language** | **dimension** | **macro F1** | **accuracy** | **min\_gpus** | **min\_gpu\_size** |
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
@@ -392,21 +392,21 @@ We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-
 | [mdeberta-v3-base](https://huggingface.co/microsoft/mdeberta-v3-base) |  multilingual | base | 72-76% | 77-80% | 1 | 8 |
 
 
-The results show in particular that:
+The results show that:
 
-* Scaling improves the performance on this task slowly, e.g., compare the results for `xlm-roberta-base`, `-large`, `-xl`, and `-xxl`. Please note that `deberta-v2-xlarge` and `deberta-v2-xxlarge` are a way smaller compared to similar named `xlm-roberta` models. One can see this difference on the GPU requirements.
-* Monolingual English models perform better than multilingual models, e.g., compare `roberta-base` vs. `xlm-roberta-base`, or `deberta-v3-base` vs. `mdeberta-v-3-base`. However, the multilingual models are sometimes the only choice for other languages you have. Disappointing is that multilingual very large `xlm-roberta-xxl` model achieves very similar results compared to the much smaller English model `roberta-large`. Nonetheless, we do not rule out that a better hyperparameter search may increase the performance gap here.
-* `deberta-v3-large` model performs slightly better than equally sized `roberta-large` on this dataset. In general, [Deberta models are known to outperform RoBERTa models](https://github.com/microsoft/DeBERTa?tab=readme-ov-file#fine-tuning-on-nlu-tasks) by 2-3 points of macro F1 score. A more recent ensemble approach of 3 `deberta-v3-large`-based models by [Yang and Li (2021)](https://arxiv.org/pdf/2110.08604) named *LSA<sub>E</sub>-X-DeBERTa* achieves macro F1 scores over 84% and accuracy over 86% on the same dataset. Provided [PyABSA](https://github.com/yangheng95/PyABSA) package is worth looking at.
+* **Scaling improves the performance on this task slowly**, e.g., compare the results for `xlm-roberta-base`, `-large`, `-xl`, and `-xxl`. Note that `deberta-v2-xlarge` and `deberta-v2-xxlarge` are a way smaller compared to similarly named `xlm-roberta` models. This difference is evident in the GPU requirements.
+* **Monolingual English models generally outperform multilingual models**, e.g., compare `roberta-base` vs. `xlm-roberta-base`, or `deberta-v3-base` vs. `mdeberta-v-3-base`. However, multilingual models are sometimes the only choice for other languages. It is disappointing that multilingual very large `xlm-roberta-xxl` model achieves results similar to the much smaller English model `roberta-large`. Nonetheless, a better hyperparameter search might improve the performance gap.
+* **The `deberta-v3-large` model performs slightly better than equally sized `roberta-large` on this dataset**. In general, [Deberta models are known to outperform RoBERTa models](https://github.com/microsoft/DeBERTa?tab=readme-ov-file#fine-tuning-on-nlu-tasks) by 2-3 percent points of macro F1 score. A more recent ensemble approach of three `deberta-v3-large`-based models by [Yang and Li (2021)](https://arxiv.org/pdf/2110.08604), named *LSA<sub>E</sub>-X-DeBERTa*, achieves macro F1 scores over 84% and accuracy over 86% on the same dataset. Provided [PyABSA](https://github.com/yangheng95/PyABSA) package is worth exploring.
 
 ### Using the Fine-tuned Model
 
-In contrast to the training procedure, we cannot use the [Evaluator](https://huggingface.co/docs/evaluate/package_reference/evaluator_classes#evaluator) class from the HuggingFace's `transformers` framework in a similar way we used the Trainer class. The Trainer class handled the FSDP appoach for model distribution over multiple GPUs. For evauation, this need to be implemented with the functionality of `accelerate` framework manually. Therefore, we create a script `use_absa.py` that we will run later with the `accelerate` tool.
+In contrast to the training procedure, the [Evaluator](https://huggingface.co/docs/evaluate/package_reference/evaluator_classes#evaluator) class from the HuggingFace's `transformers` framework cannot be used in the same way we used the Trainer class. The Trainer class handled the FSDP appoach for model distribution over multiple GPUs automatically. For evaluation, this needs to be implemented manually using the functionality of `accelerate` framework. Therefore, we create a script `use_absa.py` that we will run later with the `accelerate` tool.
 
 ```
 accelerate launch --config_file accelerate.cfg use_absa.py
 ```
 
-Within the script we first load and prepare our fine-tuned model using the `Accelerator` object.
+In the script, we first load and prepare our fine-tuned model using the `Accelerator` object.
 
 ```python
 from accelerate import Accelerator
@@ -419,7 +419,7 @@ accelerator = Accelerator()
 model = accelerator.prepare(model)
 ```
 
-As example for model evaluation, we use the test set from the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops). First, the test dataset need to be prepared in the same way we did for training. We use the [preparation function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36) `prepare_dataset_for_absa_laptop_2014` elaborated in the previous section of this tutorial. Only a small part of dataset is needed for a simple test, e.g., 16 items. But be aware that the amount of items should be a multiple of the number of GPUs used.
+For model evaluation, we use the test set from the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops). First, the test dataset needs to be prepared in the same way we did for training. We use the [preparation function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36) `prepare_dataset_for_absa_laptop_2014` elaborated in the previous section of this tutorial. Only a small part of dataset is needed for a simple test, e.g., 16 items–a batch. However, be aware that the number of items should be a multiple of the number of GPUs used. Otherwise, the batch preparation procedure will fill up the missing items with the first items in the batch, and you will need to manually remove them from predictions afterwards.
 
 ```python
 from datasets import load_dataset
@@ -431,15 +431,11 @@ dataset = load_dataset("yqzheng/semeval2014_laptops")
 data = prepare_dataset_for_absa_laptop_2014(dataset["test"], model_path)
 
 # Get the first N items from the dataset to keep it simple
-# IMPORTANT: N must be a multiple of the number of GPUs used,
-#            otherwise accelerator.prepare() on batch will fill up
-#            the missing items with the first items in the batch
-#            and you will need to manually remove them from predictions afterwards.
 batch_size = 16
 batch = data[:batch_size]
 ```
 
-In the next step, the batch is prepared for distributed usage on multiple GPUs. Actually, it is splitted in equal parts—one part per GPU. Then the prediction is conducted in different processes on multiple GPUs. In the aftermath, we need to collect different predictions from all GPUs to gather them to a single vector.
+Next, the batch is prepared for distributed usage on multiple GPUs. It is split into equal parts—one part per GPU. The prediction is then conducted in different processes on multiple GPUs. Afterward, we need to collect the predictions from all GPUs to comibine them into a single vector.
 
 ```python
 # Prepare the batch for distributed prediction
@@ -458,7 +454,7 @@ with torch.no_grad():
 logits = accelerator.gather(logits_per_device)
 ```
 
-After having gathered logits from all GPUs, all the running parallel processes have the same state. From the collected logits we derive probabilities and then predict classes.
+After gathering logits from all GPUs, all parallel processes will have the same state. From the collected logits, we derive probabilities and predict classes.
 
 ```python
 # Apply softmax to get probabilities
@@ -472,7 +468,7 @@ predicted_class_ids = probs.argmax(dim=1).tolist()
 predicted_class_labels = [model.config.id2label[class_id] for class_id in predicted_class_ids]
 ```
 
-Finally, we should clean up the GPUs from data tensors.
+Finally, we should clean up the GPUs by removing data tensors.
 
 ```python
 del batch_per_device["input_ids"]
@@ -482,7 +478,7 @@ del batch_per_device
 torch.cuda.empty_cache()
 ```
 
-Now, you may print the results of prediction by the main process.
+Now, you may print the prediction results from the main process.
 
 ```python
 for text, aspect, true_label, pred_label in zip(batch["text"], batch["aspect"], batch["labels"], pred_class_labels):

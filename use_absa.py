@@ -129,10 +129,10 @@ if __name__ == "__main__":
     data = prepare_dataset_for_absa_laptop_2014(dataset["test"], model_path)
 
     # Get the first N items from the dataset to keep it simple
-    # IMPORTANT: N must be a multiple of the number of GPUs used,
-    #            otherwise accelerator.prepare() on batch will fill up
-    #            the missing items with the first items in the batch
-    #            and you will need to manually remove them from predictions.
+    # IMPORTANT: N should be a multiple of the number of GPUs used;
+    #            otherwise, accelerator.prepare() on batch will fill up
+    #            the missing items with the first items in the batch,
+    #            and you will need to manually remove them from predictions afterwards.
     batch_size = 16
     batch = data[:batch_size]
 

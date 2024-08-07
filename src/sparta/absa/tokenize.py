@@ -8,7 +8,7 @@ def get_tokenize_function(tokenizer_name: str, max_length: int = 100) -> Callabl
 
     Args:
         tokenizer (str): Name or path of a pre-trained tokenizer
-        max_length (int, optional): Maximal sequence length. Defaults to 100.
+        max_length (int, optional): Maximum sequence length. Defaults to 100.
 
     Returns:
         BatchEncoding: Tokenized dataset
