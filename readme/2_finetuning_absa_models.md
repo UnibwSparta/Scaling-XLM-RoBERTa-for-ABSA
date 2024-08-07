@@ -14,7 +14,7 @@ sentencepiece==0.1.99
 
 ### Model Architecture
 
-The model architecture introduced by Gao et al. in the paper *[Target-Dependent Sentiment Classification With BERT](https://ieeexplore.ieee.org/abstract/document/8864964)* is shown in the figure below. For classification, the model embeddings corresponding to an aspect term, e.g. *battery timer*, are extracted from the models output. Max or mean pooling is then used to summarize multiple embeddings to one vector. On this vector, a fully connected layer performs the final classification into three classes. We can substitute the BERT model by any BERT-like model, e.g. [XLM-RoBERTA](https://arxiv.org/abs/1911.02116v2), [Deberta](https://arxiv.org/pdf/2111.09543v4), [ELECTRA](https://arxiv.org/pdf/2003.10555v1), [ERNIE](https://arxiv.org/abs/2107.02137), etc.
+The model architecture introduced by Gao et al. in the paper *[Target-Dependent Sentiment Classification With BERT](https://ieeexplore.ieee.org/abstract/document/8864964)* is shown in the figure below. For classification, the model embeddings corresponding to an aspect term, e.g., *battery timer*, are extracted from the models output. Max or mean pooling is then used to summarize multiple embeddings to one vector. On this vector, a fully connected layer performs the final classification into three classes. We can substitute the BERT model by any BERT-like model, e.g., [XLM-RoBERTA](https://arxiv.org/abs/1911.02116v2), [Deberta](https://arxiv.org/pdf/2111.09543v4), [ELECTRA](https://arxiv.org/pdf/2003.10555v1), [ERNIE](https://arxiv.org/abs/2107.02137), etc.
 
 [![Model architecture according to Gao et al. (2019)](td-bert-gao-2019.png "Model architecture according to Gao et al. (2019)")](https://ieeexplore.ieee.org/abstract/document/8864964)
 
@@ -22,7 +22,7 @@ The model architecture introduced by Gao et al. in the paper *[Target-Dependent 
 
 ### Preparing a Dataset
 
-As a working example, we take the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) from the [SemEval 2014 Task 4](https://paperswithcode.com/dataset/semeval-2014-task-4-sub-task-2) for aspect-based sentiment analysis. This dataset provides texts with aspect positions, aspects and polarities per aspect. Similarly, a dataset for multi-target stance detection can be used, e.g. [stance towards German politicians and political parties](https://github.com/UnibwSparta/German-Elections-NRW22-Stance-Dataset).
+As a working example, we take the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) from the [SemEval 2014 Task 4](https://paperswithcode.com/dataset/semeval-2014-task-4-sub-task-2) for aspect-based sentiment analysis. This dataset provides texts with aspect positions, aspects and polarities per aspect. Similarly, a dataset for multi-target stance detection can be used, e.g., [stance towards German politicians and political parties](https://github.com/UnibwSparta/German-Elections-NRW22-Stance-Dataset).
 
 ```python
 from datasets import load_dataset
@@ -121,7 +121,7 @@ Unfortunately, the HuggingFace framework does not provide a dedicated model for 
 * For `facebook/xlm-roberta-xl` and `-xxl` - [XLMRobertaXLForSequenceClassification](https://huggingface.co/docs/transformers/model_doc/xlm-roberta-xl#transformers.XLMRobertaXLForSequenceClassification)
 * For `microsoft/(m)deberta-v3-base` and `-large` - [DebertaV2ForSequenceClassification](https://huggingface.co/docs/transformers/model_doc/deberta-v2#transformers.DebertaV2ForSequenceClassification)
 
-Derived model need to provide the `forward()` method that takes all necessary parameters from our dataset, i.e. input IDs, attention masks, aspect masks, and labels.
+Derived model need to provide the `forward()` method that takes all necessary parameters from our dataset, i.e., input IDs, attention masks, aspect masks, and labels.
 
 ```python
 from typing import Optional
@@ -387,15 +387,15 @@ We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
 | [deberta-v3-base](https://huggingface.co/microsoft/deberta-v3-base) | English | base | 77-80% | 81-83% | 1 | 8 |
 | [deberta-v3-large](https://huggingface.co/microsoft/deberta-v3-large) | English | large | 81-82% | 84-85% | 1 | 16 |
-| [deberta-v2-xlarge](https://huggingface.co/microsoft/deberta-v2-xlarge) | English | large | 81-83% | 84-85% | 1 | 24 |
-| [deberta-v2-xxlarge](https://huggingface.co/microsoft/deberta-v2-xxlarge) | English | large | 82-83% | 85-86% | 1 | 24 |
+| [deberta-v2-xlarge](https://huggingface.co/microsoft/deberta-v2-xlarge) | English | xl | 81-83% | 84-85% | 1 | 24 |
+| [deberta-v2-xxlarge](https://huggingface.co/microsoft/deberta-v2-xxlarge) | English | xxl | 81-83% | 85-86% | 1 | 40 |
 | [mdeberta-v3-base](https://huggingface.co/microsoft/mdeberta-v3-base) |  multilingual | base | 72-76% | 77-80% | 1 | 8 |
 
 
 The results show in particular that:
 
-* Scaling improves the performance on this task slowly, e.g. compare the results for `xlm-roberta-base`, `-large`, `-xl`, and `-xxl`.
-* Monolingual English models perform better than multilingual models, e.g. compare `roberta-base` vs. `xlm-roberta-base`, or `deberta-v3-base` vs. `mdeberta-v-3-base`. However, the multilingual models are sometimes the only choice for other languages you have. Disappointing is that multilingual very large `xlm-roberta-xxl` model achieves very similar results compared to the much smaller English model `roberta-large`. Nonetheless, we do not rule out that a better hyperparameter search may increase the performance gap here.
+* Scaling improves the performance on this task slowly, e.g., compare the results for `xlm-roberta-base`, `-large`, `-xl`, and `-xxl`. Please note that `deberta-v2-xlarge` and `deberta-v2-xxlarge` are a way smaller compared to similar named `xlm-roberta` models. One can see this difference on the GPU requirements.
+* Monolingual English models perform better than multilingual models, e.g., compare `roberta-base` vs. `xlm-roberta-base`, or `deberta-v3-base` vs. `mdeberta-v-3-base`. However, the multilingual models are sometimes the only choice for other languages you have. Disappointing is that multilingual very large `xlm-roberta-xxl` model achieves very similar results compared to the much smaller English model `roberta-large`. Nonetheless, we do not rule out that a better hyperparameter search may increase the performance gap here.
 * `deberta-v3-large` model performs slightly better than equally sized `roberta-large` on this dataset. In general, [Deberta models are known to outperform RoBERTa models](https://github.com/microsoft/DeBERTa?tab=readme-ov-file#fine-tuning-on-nlu-tasks) by 2-3 points of macro F1 score. A more recent ensemble approach of 3 `deberta-v3-large`-based models by [Yang and Li (2021)](https://arxiv.org/pdf/2110.08604) named *LSA<sub>E</sub>-X-DeBERTa* achieves macro F1 scores over 84% and accuracy over 86% on the same dataset. Provided [PyABSA](https://github.com/yangheng95/PyABSA) package is worth looking at.
 
 ### Using the Fine-tuned Model
@@ -419,7 +419,7 @@ accelerator = Accelerator()
 model = accelerator.prepare(model)
 ```
 
-As example for model evaluation, we use the test set from the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops). First, the test dataset need to be prepared in the same way we did for training. We use the [preparation function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36) `prepare_dataset_for_absa_laptop_2014` elaborated in the previous section of this tutorial. Only a small part of dataset is needed for a simple test, e.g. 16 items. But be aware that the amount of items should be a multiple of the number of GPUs used.
+As example for model evaluation, we use the test set from the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops). First, the test dataset need to be prepared in the same way we did for training. We use the [preparation function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36) `prepare_dataset_for_absa_laptop_2014` elaborated in the previous section of this tutorial. Only a small part of dataset is needed for a simple test, e.g., 16 items. But be aware that the amount of items should be a multiple of the number of GPUs used.
 
 ```python
 from datasets import load_dataset
