@@ -67,7 +67,7 @@ def get_aspect_mask(
     return token_indices, tokens_mask
 ```
 
-Subsequently, an additional function `get_all_aspect_masks()` extracts aspect masks from the complete dataset. Please refer to the [full code for this function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L55-L106).
+Subsequently, an additional function `get_all_aspect_masks()` extracts aspect masks from the complete dataset. Please refer to the [full code for this function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L60-L80).
 
 ```python
 _, aspect_masks = get_all_aspect_masks(
@@ -110,7 +110,7 @@ After completing these steps, items in the training dataset look as follows:
 }
 ```
 
-We repeat the steps performed for the `ds_train` dataset split for the `ds_test` as well. Please refer to the [complete code example for dataset split preparation](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36).
+We repeat the steps performed for the `ds_train` dataset split for the `ds_test` as well. Please refer to the [complete code example for dataset split preparation](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L10-L36).
 
 ### Create a Model
 
@@ -419,7 +419,7 @@ accelerator = Accelerator()
 model = accelerator.prepare(model)
 ```
 
-For model evaluation, we use the test set from the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops). First, the test dataset needs to be prepared in the same way we did for training. We use the [preparation function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L9-L36) `prepare_dataset_for_absa_laptop_2014` elaborated in the previous section of this tutorial. Only a small part of dataset is needed for a simple test, e.g., 16 items–a batch. However, be aware that the number of items should be a multiple of the number of GPUs used. Otherwise, the batch preparation procedure will fill up the missing items with the first items in the batch, and you will need to manually remove them from predictions afterwards.
+For model evaluation, we use the test set from the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops). First, the test dataset needs to be prepared in the same way we did for training. We use the [preparation function](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/src/sparta/absa/aspects.py#L10-L36) `prepare_dataset_for_absa_laptop_2014` elaborated in the previous section of this tutorial. Only a small part of dataset is needed for a simple test, e.g., 16 items–a batch. However, be aware that the number of items should be a multiple of the number of GPUs used. Otherwise, the batch preparation procedure will fill up the missing items with the first items in the batch, and you will need to manually remove them from predictions afterwards.
 
 ```python
 from datasets import load_dataset
