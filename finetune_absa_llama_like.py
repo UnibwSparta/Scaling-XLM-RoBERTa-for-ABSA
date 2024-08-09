@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""finetune_absa_llama.py: Fine-tune a Llama-like model for aspect-based sentiment analysis using FSDP."""
+"""finetune_absa_llama.py: Fine-tune a Llama-like model for aspect-based sentiment analysis using FSDP.
+
+Before running complete TODO 1 and TODO 2 tasks in the script by uncommenting the model you want to use.
+
+To run this script use accelerate within poetry environment:
+
+    poetry run accelerate launch --config_file accelerate_configs/llama.yaml finetune_absa_llama_like.py
+"""
 
 import warnings
 
@@ -26,8 +33,19 @@ if __name__ == "__main__":
     # Load aspect-based sentiment analysis dataset for laptop domain
     dataset = load_dataset("yqzheng/semeval2014_laptops")
 
-    train_ds = prepare_dataset_for_absa_laptop_2014_llama(dataset["train"], aspect_suffix, model_path)
-    test_ds = prepare_dataset_for_absa_laptop_2014_llama(dataset["test"], aspect_suffix, model_path)
+    max_length = 128
+    train_ds = prepare_dataset_for_absa_laptop_2014_llama(
+        ds=dataset["train"],
+        tokenizer_name=model_path,
+        aspect_suffix=aspect_suffix,
+        max_length=max_length,
+    )
+    test_ds = prepare_dataset_for_absa_laptop_2014_llama(
+        dataset["test"],
+        tokenizer_name=model_path,
+        aspect_suffix=aspect_suffix,
+        max_length=max_length,
+    )
 
     # Create the model
     model = LlamaForSequenceClassification.from_pretrained(model_path, num_labels=3)

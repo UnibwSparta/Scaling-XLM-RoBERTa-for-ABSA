@@ -115,6 +115,7 @@ def prepare_dataset_for_absa_laptop_2014_llama(
     ds: Dataset,
     tokenizer_name: str,
     aspect_suffix: str,
+    max_length: int,
 ) -> Dataset:
     """Prepare dataset for aspect-based sentiment analysis with a Llama-like model for sequence classification.
 
@@ -127,6 +128,7 @@ def prepare_dataset_for_absa_laptop_2014_llama(
         ds (Dataset): Dataset
         tokenizer_name (str): Name of the tokenizer to use
         aspect_suffix (str): Surfix to add to the text before the additional aspect (e.g., "This is a review about")
+        max_length (int): Maximum length of the tokenized text
 
     Returns:
         Dataset: Prepared dataset
@@ -134,7 +136,7 @@ def prepare_dataset_for_absa_laptop_2014_llama(
     # Get tokenizer function
     tokenize = get_tokenize_function(
         tokenizer_name,
-        max_length=100,
+        max_length=max_length,
         padding_max_length=True,
         pad_token_is_eos_token=True,
     )
