@@ -1,6 +1,7 @@
 poetry.lock
 absa_checkpoints/
 absa_models/
+prepared_datasets/
 .history/
 
 # Byte-compiled / optimized / DLL files

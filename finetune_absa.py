@@ -32,13 +32,7 @@ To run this script use accelerate within poetry environment:
 import warnings
 
 from datasets import load_dataset
-from transformers import (
-    AutoConfig,
-    AutoTokenizer,
-    EarlyStoppingCallback,
-    Trainer,
-    TrainingArguments,
-)
+from transformers import AutoConfig, AutoTokenizer, EarlyStoppingCallback, Trainer, TrainingArguments
 
 from sparta.absa.aspects import prepare_dataset_for_absa_laptop_2014
 from sparta.absa.metrics import get_metrics_function
@@ -58,7 +52,7 @@ from sparta.absa.models import DebertaForABSA as ModelForABSA
 # from sparta.absa.models import ErnieForABSA as ModelForABSA
 
 # TODO 2: Ucomment the model you want to use
-model_name = "roberta-base"
+# model_name = "roberta-base"
 # model_name = "roberta-large"
 # model_name = "xlm-roberta-base"
 # model_name = "xlm-roberta-large"

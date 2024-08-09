@@ -1,3 +1,4 @@
+from string import Template
 from typing import Any, Dict, List, Set, Tuple
 
 from datasets import Dataset
@@ -7,7 +8,7 @@ from sparta.absa.tokenize import get_tokenize_function
 
 
 def prepare_dataset_for_absa_laptop_2014(ds: Dataset, tokenizer_name: str) -> Dataset:
-    """Tokenize dataset, find aspect masks, and split into train and test datasets.
+    """Tokenize dataset and find aspect masks.
 
     Args:
         dataset (Dataset): Full original dataset
@@ -20,7 +21,11 @@ def prepare_dataset_for_absa_laptop_2014(ds: Dataset, tokenizer_name: str) -> Da
     tokenized_as_batch_encoding = tokenize(ds)
 
     # Get aspect masks for all examples in the train and test datasets
-    _, aspect_masks = get_all_aspect_masks(batch_encoding=tokenized_as_batch_encoding, start_positions=ds["start"], end_positions=ds["end"])
+    _, aspect_masks = get_all_aspect_masks(
+        batch_encoding=tokenized_as_batch_encoding,
+        start_positions=ds["start"],
+        end_positions=ds["end"],
+    )
 
     # Add tokenized inputs and aspect masks to the original dataset
     ds = ds.add_column("input_ids", tokenized_as_batch_encoding["input_ids"])
@@ -64,10 +69,10 @@ def get_all_aspect_masks(batch_encoding: BatchEncoding, start_positions: List[in
         Set[int]: List of token indexes
         List[bool]: Mask for this tokens
     """
-    max_len_tokens = len(batch_encoding["input_ids"][0])
     aspect_indices = []
     aspect_masks = []
     for item_encoding, start, end in zip(batch_encoding[:], start_positions, end_positions):
+        max_len_tokens = len(item_encoding.ids)
         indices, mask = get_aspect_mask(item_encoding, start, end, max_len_tokens)
         aspect_indices.append(indices)
         aspect_masks.append(mask)
@@ -104,3 +109,52 @@ def get_aspect_mask(
         raise ValueError("Empty aspect mask")
 
     return token_indices, tokens_mask
+
+
+def prepare_dataset_for_absa_laptop_2014_llama(
+    ds: Dataset,
+    tokenizer_name: str,
+    aspect_suffix: str,
+) -> Dataset:
+    """Prepare dataset for aspect-based sentiment analysis with a Llama-like model for sequence classification.
+
+    This function adds an aspect suffix to the text, renames the label column to labels, remaps the labels, and tokenizes the dataset.
+    LlamaForSequenceClassification expects the labels to be in the range [0, num_labels - 1], but the dataset has them in the range [-1, num_labels - 2].
+    The aspect suffix is added to the text to help the model understand the aspect of the review.
+    LlamaForSequenceClassification will use the last token for final classification.
+
+    Args:
+        ds (Dataset): Dataset
+        tokenizer_name (str): Name of the tokenizer to use
+        aspect_suffix (str): Surfix to add to the text before the additional aspect (e.g., "This is a review about")
+
+    Returns:
+        Dataset: Prepared dataset
+    """
+    # Get tokenizer function
+    tokenize = get_tokenize_function(
+        tokenizer_name,
+        max_length=100,
+        padding_max_length=True,
+        pad_token_is_eos_token=True,
+    )
+
+    # Add aspect suffix to the dataset
+    suffix = Template(aspect_suffix + " $aspect")
+
+    def add_aspect_suffix_to_example(example: Dict[str, Any]) -> Dict[str, Any]:
+        example["text"] = example["text"] + suffix.substitute(aspect=example["aspect"])
+        return example
+
+    ds = ds.map(add_aspect_suffix_to_example)
+
+    # Rename the label column to labels to match the model's requirements
+    ds = ds.rename_column("label", "labels")
+
+    # Remap the labels to the fit the model's requirements
+    ds = ds.map(remap_labels_for_absa_laptop_2014)
+
+    # Tokenize dataset
+    ds = ds.map(tokenize)
+
+    return ds

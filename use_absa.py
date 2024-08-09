@@ -29,15 +29,14 @@ To run this script use accelerate within poetry environment:
         poetry run accelerate launch --config_file accelerate_configs/ernie.yaml use_absa.py
 """
 
-from typing import Dict, List
 import warnings
+from typing import Dict, List
 
 import torch
 from accelerate import Accelerator
 from datasets import load_dataset
 
 from sparta.absa.aspects import prepare_dataset_for_absa_laptop_2014
-
 
 # TODO 1: Uncomment the model you want to use:
 # - RobertaForABSA is the roberta-base or -large model

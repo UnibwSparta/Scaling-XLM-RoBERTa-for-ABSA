@@ -3,12 +3,12 @@ from typing import Optional, Tuple, Union
 import torch
 from torch.nn import CrossEntropyLoss
 from transformers import (
-    RobertaForSequenceClassification,
-    XLMRobertaForSequenceClassification,
-    XLMRobertaXLForSequenceClassification,
     DebertaV2ForSequenceClassification,
     ElectraForSequenceClassification,
     ErnieForSequenceClassification,
+    RobertaForSequenceClassification,
+    XLMRobertaForSequenceClassification,
+    XLMRobertaXLForSequenceClassification,
 )
 
 
@@ -36,6 +36,7 @@ class XLMRobertaForABSA(XLMRobertaForSequenceClassification):
         labels: Optional[torch.LongTensor] = None,
     ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
         return absa_forward(self, "roberta", input_ids, attention_mask, aspect_mask, labels)
+
 
 class XLMRobertaXLForABSA(XLMRobertaXLForSequenceClassification):
     """Aspect-based sentiment analysis model based on XLM-RoBERTa-XL/XXL for sequence classification."""
