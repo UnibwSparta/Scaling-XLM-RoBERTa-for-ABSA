@@ -1,6 +1,6 @@
 ## Fine-tuning BERT-like Models of Different Sizes on Multiple GPUs for Aspect-based Sentiment Analysis (ABSA)
 
-This article provides a detailed tutorial on how to fine-tune differently sized BERT-like language models, such as [XLM-RoBERTa](https://arxiv.org/abs/1911.02116v2) or [(m)DebertaV3](https://arxiv.org/pdf/2111.09543v4), for the specific task of aspect-based sentiment analysis (ABSA) using the approach proposed by [Gao et al. (2019)](https://ieeexplore.ieee.org/abstract/document/8864964) originally for the [BERT](https://arxiv.org/abs/1810.04805?amp=1) model. The implementation uses the HuggingFace's frameworks [transformers](https://huggingface.co/docs/transformers) and [accelerate](https://huggingface.co/docs/accelerate/index). We provide full executable code examples for [fine-tuning an ABSA model](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) and subsequent [evaluation](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/use_absa.py) of the trained model. Please install the necessary [requirements](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/requirements.txt) for this tutorial first.
+This article provides a detailed tutorial on how to fine-tune differently sized BERT-like language models, such as [XLM-RoBERTa](https://arxiv.org/abs/1911.02116v2) or [(m)DebertaV3](https://arxiv.org/pdf/2111.09543v4), for the specific task of aspect-based sentiment analysis (ABSA) using the approach proposed by [Gao et al. (2019)](https://ieeexplore.ieee.org/abstract/document/8864964) originally for the [BERT](https://arxiv.org/abs/1810.04805?amp=1) model. The implementation uses the HuggingFace's frameworks [transformers](https://huggingface.co/docs/transformers) and [accelerate](https://huggingface.co/docs/accelerate/index). We provide full executable code examples for [fine-tuning an ABSA model](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa_bert_like.py) and subsequent [evaluation](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/use_absa_bert_like.py) of the trained model. Please install the necessary [requirements](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/requirements.txt) for this tutorial first.
 
 ```
 transformers
@@ -279,10 +279,10 @@ use_cpu: false
 Please refer to the full [configuration examles for different models](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/accelerate_configs/). The training script must be started in the following way:
 
 ```bash
-accelerate launch --config_file accelerate.cfg finetune_absa.py
+accelerate launch --config_file accelerate.cfg finetune_absa_bert_like.py
 ```
 
-Within the `finetune_absa.py` script, we first create training arguments for the Trainer. These include different hyperparameters and settings for Trainer behavior, such as how many model checkpoints to save and how to evaluate the best model.
+Within the `finetune_absa_bert_like.py` script, we first create training arguments for the Trainer. These include different hyperparameters and settings for Trainer behavior, such as how many model checkpoints to save and how to evaluate the best model.
 
 ```python
 from transformers import TrainingArguments
@@ -368,11 +368,11 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 tokenizer.save_pretrained(store_path)
 ```
 
-Please refer to the [full code of `finetune_absa.py` script](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py).
+Please refer to the [full code of `finetune_absa_bert_like.py` script](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa_bert_like.py).
 
 ### Fine-tuning Results
 
-We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa.py) to train differently sized (XLM-)RoBERTa and (m)Deberta v2/v3 models without dedicated hyperparameter search. The training results for the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) with the described ABSA model are shown in the table below. We conducted three runs for each setup, evaluating on the test set, and provide rounded result ranges to examplarily showcase the effects of scaling, multilinguality, and model architecture.
+We used the [above code](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/finetune_absa_bert_like.py) to train differently sized (XLM-)RoBERTa and (m)Deberta v2/v3 models without dedicated hyperparameter search. The training results for the [Laptop 2014 dataset](https://huggingface.co/datasets/yqzheng/semeval2014_laptops) with the described ABSA model are shown in the table below. We conducted three runs for each setup, evaluating on the test set, and provide rounded result ranges to examplarily showcase the effects of scaling, multilinguality, and model architecture.
 
 | **roberta model** | **language** | **dimension** | **macro F1** | **accuracy** | **min\_gpus** | **min\_gpu\_size** |
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
@@ -400,10 +400,10 @@ The results show that:
 
 ### Using the Fine-tuned Model
 
-In contrast to the training procedure, the [Evaluator](https://huggingface.co/docs/evaluate/package_reference/evaluator_classes#evaluator) class from the HuggingFace's `transformers` framework cannot be used in the same way we used the Trainer class. The Trainer class handled the FSDP appoach for model distribution over multiple GPUs automatically. For evaluation, this needs to be implemented manually using the functionality of `accelerate` framework. Therefore, we create a script `use_absa.py` that we will run later with the `accelerate` tool.
+In contrast to the training procedure, the [Evaluator](https://huggingface.co/docs/evaluate/package_reference/evaluator_classes#evaluator) class from the HuggingFace's `transformers` framework cannot be used in the same way we used the Trainer class. The Trainer class handled the FSDP appoach for model distribution over multiple GPUs automatically. For evaluation, this needs to be implemented manually using the functionality of `accelerate` framework. Therefore, we create a script `use_absa_bert_like.py` that we will run later with the `accelerate` tool.
 
 ```
-accelerate launch --config_file accelerate.cfg use_absa.py
+accelerate launch --config_file accelerate.cfg use_absa_bert_like.py
 ```
 
 In the script, we first load and prepare our fine-tuned model using the `Accelerator` object.
@@ -488,4 +488,4 @@ for text, aspect, true_label, pred_label in zip(batch["text"], batch["aspect"], 
     accelerator.print()
 ```
 
-Please refer to the [full code example of `use_absa.py` script](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/use_absa.py).
+Please refer to the [full code example of `use_absa_bert_like.py` script](https://github.com/UnibwSparta/Scaling-XLM-RoBERTa-for-ABSA/blob/main/use_absa_bert_like.py).

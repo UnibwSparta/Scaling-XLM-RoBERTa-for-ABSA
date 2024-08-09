@@ -3,7 +3,7 @@ name = "llms-sentiment-analysis-and-stance-detection"
 version = "1.0.0"
 description = ""
 authors = ["i23barmu <arthur.mueller@unibw.de>"]
-readme = "README.rst"
+readme = "README.md"
 packages = [{include = "sparta", from = "src"}]
 
 [tool.poetry.dependencies]

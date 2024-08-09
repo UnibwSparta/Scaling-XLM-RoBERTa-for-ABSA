@@ -1,32 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""use_absa.py: Use a model to predict sentiments for aspect-based sentiment analysis using FSDP.
+"""use_absa_bert_like.py: Use a model to predict sentiments for aspect-based sentiment analysis using FSDP.
 
 Before running complete TODO 1 and TODO 2 tasks in the script by uncommenting the model you want to use.
 
 To run this script use accelerate within poetry environment:
 
     - For RoBERTA-base or -large model:
-        poetry run accelerate launch --config_file accelerate_configs/roberta.yaml use_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/roberta.yaml use_absa_bert_like.py
 
     - For XLM-RoBERTA-base or -large model:
-        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_base_large.yaml use_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_base_large.yaml use_absa_bert_like.py
 
     - For XLM-RoBERTA-XL model:
-        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xl.yaml use_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xl.yaml use_absa_bert_like.py
 
     - For XLM-RoBERTA-XXL model:
-        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xxl.yaml use_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xxl.yaml use_absa_bert_like.py
 
    - For (m)DeBerta-base or -large model:
-        poetry run accelerate launch --config_file accelerate_configs/deberta.yaml use_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/deberta.yaml use_absa_bert_like.py
 
    - For ELECTRA-base or -large model:
-        poetry run accelerate launch --config_file accelerate_configs/electra.yaml use_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/electra.yaml use_absa_bert_like.py
 
    - For ERNIE-base or -large model:
-        poetry run accelerate launch --config_file accelerate_configs/ernie.yaml use_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/ernie.yaml use_absa_bert_like.py
 """
 
 import warnings
@@ -52,7 +52,7 @@ from sparta.absa.models import RobertaForABSA as ModelForABSA
 # from sparta.absa.models import ElectraForABSA as ModelForABSA
 # from sparta.absa.models import ErnieForABSA as ModelForABSA
 
-# TODO 2: Ucomment the model you want to use. You need to train the model first. See: finetune_absa.py
+# TODO 2: Ucomment the model you want to use. You need to train the model first. See: finetune_absa_bert_like.py
 model_path = "absa_models/roberta-base"
 # model_path = "absa_models/roberta-large"
 # model_path = "absa_models/xlm-roberta-base"

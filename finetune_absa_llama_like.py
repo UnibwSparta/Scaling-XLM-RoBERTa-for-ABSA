@@ -39,14 +39,14 @@ if __name__ == "__main__":
 
         # Training hyperparameters
         # Number of epoch can be high since we have early stopping in Trainer
-        num_train_epochs=100,
+        num_train_epochs=16,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
         gradient_accumulation_steps=1,
 
         # Optimizer/scheduler parameters
-        # learning_rate=1e-4,
-        learning_rate=1e-5,
+        learning_rate=1e-4,
+        # learning_rate=1e-5,
         weight_decay=0.01,
         warmup_steps=100,
 

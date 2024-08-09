@@ -1,32 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""finetune_absa.py: Fine-tune a model for aspect-based sentiment analysis using FSDP.
+"""finetune_absa_bert_like.py: Fine-tune a model for aspect-based sentiment analysis using FSDP.
 
 Before running complete TODO 1 and TODO 2 tasks in the script by uncommenting the model you want to use.
 
 To run this script use accelerate within poetry environment:
 
     - For RoBERTA-base or -large model:
-        poetry run accelerate launch --config_file accelerate_configs/roberta.yaml finetune_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/roberta.yaml finetune_absa_bert_like.py
 
     - For XLM-RoBERTA-base or -large model:
-        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_base_large.yaml finetune_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_base_large.yaml finetune_absa_bert_like.py
 
     - For XLM-RoBERTA-XL model:
-        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xl.yaml finetune_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xl.yaml finetune_absa_bert_like.py
 
     - For XLM-RoBERTA-XXL model:
-        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xxl.yaml finetune_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/xlm_roberta_xxl.yaml finetune_absa_bert_like.py
 
    - For (m)DeBerta-base or -large model:
-        poetry run accelerate launch --config_file accelerate_configs/deberta.yaml finetune_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/deberta.yaml finetune_absa_bert_like.py
 
    - For ELECTRA-base or -large model:
-        poetry run accelerate launch --config_file accelerate_configs/electra.yaml finetune_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/electra.yaml finetune_absa_bert_like.py
 
    - For ERNIE-base or -large model:
-        poetry run accelerate launch --config_file accelerate_configs/ernie.yaml finetune_absa.py
+        poetry run accelerate launch --config_file accelerate_configs/ernie.yaml finetune_absa_bert_like.py
 """
 
 import warnings
