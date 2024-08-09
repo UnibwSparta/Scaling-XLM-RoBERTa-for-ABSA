@@ -22,7 +22,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
 
 # TODO 1: Define the path to the model
-model_path = "/mnt/exafs/models/llama31/Meta-Llama-3.1-8B/"
+model_path = "meta-llama/Meta-Llama-3.1-8B"
 
 # TODO 2: Customize the aspect suffix. Note that the target aspect will be added after this suffix.
 aspect_suffix = "–This is a review about"
@@ -63,8 +63,8 @@ if __name__ == "__main__":
         gradient_accumulation_steps=1,
 
         # Optimizer/scheduler parameters
-        learning_rate=1e-4,
-        # learning_rate=1e-5,
+        # learning_rate=1e-4,
+        learning_rate=1e-5,
         weight_decay=0.01,
         warmup_steps=100,
 
